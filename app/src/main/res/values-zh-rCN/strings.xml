@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">E•CAL</string>
+    <string name="fab_content_description_add_new_event">添加新事件</string>
+    <string name="text_no_events_today_hint">今日无事</string>
+    <string name="topbar_title_text_new_event">添加新事件</string>
+    <string name="topbar_title_text_edit_event">编辑事件</string>
+    <string name="button_text_delete">删除</string>
+    <string name="text_field_label_summary">摘要</string>
+    <string name="text_field_label_description">描述</string>
+    <string name="text_field_label_location">地点</string>
+    <string name="switch_all_day_description">全天事件</string>
+    <string name="datetime_picker_label_start_at">开始于：</string>
+    <string name="text_field_trailing_icon_content_description_select_date">选择日期</string>
+    <string name="text_ok">确定</string>
+    <string name="text_cancel">取消</string>
+    <string name="text_field_trailing_icon_content_description_select_time">选择时间</string>
+    <string name="datetime_picker_label_end_at">结束于：</string>
+    <string name="text_save">保存</string>
+    <string name="text_delete">删除</string>
+    <string name="text_delete_event">删除事件</string>
+    <string name="text_delete_event_warning">确定要删除这个事件吗？</string>
+    <string name="text_event_alarm_title">提醒</string>
+    <string name="text_at_alarm_type_hint">在</string>
+    <string name="text_before_alarm_type_hint">提前</string>
+    <string name="text_non_negative_integer_only_error">请输入一个非负整数。</string>
+    <string name="button_text_add_absolute_alarm">添加定点提醒</string>
+    <string name="button_text_add_relative_alarm">添加提前提醒</string>
+    <string name="text_minute_s">分钟</string>
+    <string name="switch_period_description">时间段</string>
+    <string name="text_no_title_hint">（无标题）</string>
+    <string name="icon_content_description_event">事件</string>
+    <string name="button_content_description_edit">编辑</string>
+</resources>
