@@ -1,25 +1,38 @@
 package net.k74n3xz.ecal.reminder
 
+import android.Manifest
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.util.Log
+import dagger.hilt.android.AndroidEntryPoint
+import net.k74n3xz.ecal.R
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class ReminderReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent?) {
-        if (intent == null) return
-        try {
-            val id = intent.getLongExtra("extra_reminder_id", -1L)
-            val title = intent.getStringExtra("extra_title")
-            val text = intent.getStringExtra("extra_text")
-            val notifId =
-                if (id >= 0L) (id xor (id ushr 32)).toInt() else System.currentTimeMillis().toInt()
-            NotificationHelper.ensureChannel(context)
-            NotificationHelper.showNotification(
-                context, notifId, title ?: "Reminder", text ?: "You have a reminder"
+    @Inject
+    lateinit var notificationHelper: NotificationHelper
+
+    override fun onReceive(context: Context, intent: Intent) {
+        // TODO: Define how to handle reminder broadcasts that do not include a valid reminder ID.
+        val id = intent.getIntExtra(ReminderScheduler.INTENT_ID_KEY, 0)
+        val title = intent.getStringExtra(ReminderScheduler.INTENT_TITLE_KEY)
+            ?: context.getString(R.string.notification_default_title_reminder)
+        val text =
+            intent.getStringExtra(ReminderScheduler.INTENT_TEXT_KEY)
+                ?: context.getString(R.string.notification_default_text_reminder)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+            && context.applicationContext.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            Log.e(
+                "ReminderReceiver",
+                "onReceive: ${Manifest.permission.POST_NOTIFICATIONS} is not granted."
             )
-        } catch (e: Exception) {
-            Log.e("ReminderReceiver", "error handling reminder: ${e.message}")
+        } else {
+            notificationHelper.showNotification(id, title, text)
         }
     }
 }
