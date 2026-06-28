@@ -25,14 +25,17 @@ import net.fortuna.ical4j.model.property.Trigger
 import net.fortuna.ical4j.model.property.Uid
 import net.k74n3xz.ecal.data.calendar.database.entity.AlarmComponent
 import net.k74n3xz.ecal.data.calendar.database.entity.EventComponent
-import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.Action
-import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.TriggerRelationship
-import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.TriggerType
+import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.alarmcomponent.Action
+import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.alarmcomponent.TriggerRelationship
+import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.alarmcomponent.TriggerType
 import net.k74n3xz.ecal.data.calendar.model.Alarm
 import net.k74n3xz.ecal.data.calendar.model.Event
 import java.io.StringReader
 import java.time.Duration
 import java.time.Instant
+
+// TODO: Replace this prototype PRODID with the final stable product identifier before release.
+private const val PROD_ID: String = "-//K74n3xz//E·CAL prototype//ZH-CN"
 
 fun EventComponent.toEvent(): Event = Event(
     uid,
@@ -54,7 +57,7 @@ fun Event.toEventComponent(originalIcs: String? = null): EventComponent {
     val rawIcs: String = if (originalIcs == null) {
         Calendar()
             .withDefaults()
-            .withProdId("-//K74n3xz//E·CAL prototype//ZH-CN")  // TODO: Replace the prototype PRODID with a stable production identifier.
+            .withProdId(PROD_ID)
             .withComponent(
                 VEvent(
                     PropertyList(
@@ -92,7 +95,7 @@ fun Event.toEventComponent(originalIcs: String? = null): EventComponent {
                 }
             }
             .withDefaults()
-            .withProdId("-//K74n3xz//E·CAL prototype//ZH-CN")  // TODO: Replace the prototype PRODID with a stable production identifier.
+            .withProdId(PROD_ID)
             .fluentTarget
 
         val event = calendar.getComponents<VEvent>()[0]
@@ -247,7 +250,7 @@ fun Alarm.toAlarmComponent(originalIcs: String? = null): AlarmComponent {
     val rawIcs: String = if (originalIcs == null) {
         Calendar()
             .withDefaults()
-            .withProdId("-//K74n3xz//E·CAL prototype//ZH-CN")  // TODO: Replace the prototype PRODID with a stable production identifier.
+            .withProdId(PROD_ID)
             .withComponent(
                 VEvent().also {
                     it.add<VEvent>(
@@ -281,7 +284,7 @@ fun Alarm.toAlarmComponent(originalIcs: String? = null): AlarmComponent {
                 }
             }
             .withDefaults()
-            .withProdId("-//K74n3xz//E·CAL prototype//ZH-CN")  // TODO: Replace the prototype PRODID with a stable production identifier.
+            .withProdId(PROD_ID)
             .fluentTarget
         val event = calendar.getComponents<VEvent>()[0]
         val alarm = event.alarms[0]

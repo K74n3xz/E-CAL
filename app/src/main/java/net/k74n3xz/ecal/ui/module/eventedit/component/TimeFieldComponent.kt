@@ -44,8 +44,8 @@ fun TimeFieldComponent(
     modifier: Modifier = Modifier,
     is24Hour: Boolean = true  // TODO: Use the system time format setting as the default.
 ) {
-    val timeFormatter =
-        DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)  // TODO: Format displayed time according to is24Hour.
+    // TODO: Make the displayed value honor is24Hour.
+    val timeFormatter = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)
 
     var isShowingDialog by remember { mutableStateOf(false) }
     var isUsingPicker by remember { mutableStateOf(true) }

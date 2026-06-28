@@ -45,7 +45,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.text.isDigitsOnly
 import net.k74n3xz.ecal.R
-import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.TriggerRelationship
+import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.alarmcomponent.TriggerRelationship
 import net.k74n3xz.ecal.data.calendar.model.Alarm
 import net.k74n3xz.ecal.ui.compositionlocal.LocalTimeZone
 import java.time.Duration
@@ -63,7 +63,7 @@ fun AlarmCardEditComponent(
     onRemove: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // TODO: Add editing support for audio and email alarm actions.
+    // TODO: Add editors for audio and email actions instead of hiding unsupported alarms.
     if (alarm.action !is Alarm.Action.Display) {
         return
     }
@@ -97,15 +97,15 @@ fun AlarmCardEditComponent(
         )
     }
 
-    // Trigger - RelativeTrigger: Offest
-    // TODO: Allow relative alarm offsets to use units beyond minutes.
+    // Trigger - RelativeTrigger: Offset
+    // TODO: Let users enter relative offsets in units other than minutes.
     val offsetFieldState = rememberTextFieldState(
         initialText = when (alarm.trigger) {
-            is Alarm.Trigger.RelativeTrigger -> alarm.trigger.offset.toMinutes().toString()
+            is Alarm.Trigger.RelativeTrigger -> (-alarm.trigger.offset.toMinutes()).toString()
             is Alarm.Trigger.AbsoluteTrigger -> 15.toString()
         }
     )
-    // TODO: Support relative alarms that trigger after the selected event boundary.
+    // TODO: Let users choose whether a relative alarm fires before or after its event boundary.
     val isOffsetFieldError = !offsetFieldState.text.let { it.isNotEmpty() && it.isDigitsOnly() }
 
     // Trigger - AbsoluteTrigger: At
@@ -148,7 +148,7 @@ fun AlarmCardEditComponent(
         val newTrigger = when (triggerType) {
             TriggerType.RELATIVE -> Alarm.Trigger.RelativeTrigger(
                 relativeTo = relativeTo,
-                offset = Duration.ofMinutes(offsetFieldState.text.toString().toLong())
+                offset = Duration.ofMinutes(-offsetFieldState.text.toString().toLong())
             )
 
             TriggerType.ABSOLUTE -> Alarm.Trigger.AbsoluteTrigger(
@@ -385,7 +385,7 @@ private fun AlarmCardEditComponentPreview() {
                 action = Alarm.Action.Display("This is an example description."),
                 trigger = Alarm.Trigger.RelativeTrigger(
                     relativeTo = TriggerRelationship.START,
-                    offset = Duration.ofMinutes(30)
+                    offset = Duration.ofMinutes(-30)
                 )
             )
         )

@@ -4,22 +4,24 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.Action
-import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.TriggerRelationship
-import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.TriggerType
+import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.alarmcomponent.Action
+import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.alarmcomponent.TriggerRelationship
+import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.alarmcomponent.TriggerType
 import java.time.Duration
 import java.time.Instant
 
 @Entity(
     tableName = "alarm_component",
-    indices = [Index(value = ["refUid"])],
-    foreignKeys = [ForeignKey(
-        entity = EventComponent::class,
-        parentColumns = ["uid"],
-        childColumns = ["refUid"],
-        onDelete = ForeignKey.CASCADE,
-        onUpdate = ForeignKey.CASCADE
-    )]
+    indices = [Index("refUid")],
+    foreignKeys = [
+        ForeignKey(
+            entity = EventComponent::class,
+            parentColumns = ["uid"],
+            childColumns = ["refUid"],
+            onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.CASCADE
+        )
+    ]
 )
 data class AlarmComponent(
     @PrimaryKey(autoGenerate = true) val id: Long?,

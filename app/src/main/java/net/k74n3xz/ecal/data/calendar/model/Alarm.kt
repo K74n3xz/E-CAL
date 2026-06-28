@@ -1,7 +1,7 @@
 package net.k74n3xz.ecal.data.calendar.model
 
 import android.net.Uri
-import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.TriggerRelationship
+import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.alarmcomponent.TriggerRelationship
 import java.time.Duration
 import java.time.Instant
 

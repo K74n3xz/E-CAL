@@ -3,8 +3,8 @@ package net.k74n3xz.ecal.data.calendar.database.entity
 import androidx.annotation.IntRange
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.TimeTransparency
-import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.EventStatus
+import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.eventcomponent.TimeTransparency
+import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.eventcomponent.EventStatus
 import java.time.Instant
 
 @Entity(tableName = "event_component")

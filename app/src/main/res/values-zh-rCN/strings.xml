@@ -60,4 +60,8 @@
     <string name="notification_channel_description_reminders">来自 E•CAL 的提醒通知</string>
     <string name="notification_default_title_reminder">提醒</string>
     <string name="notification_default_text_reminder">你有一条提醒。</string>
+    <string name="notification_channel_name_foreground_service">E•CAL 后台活动</string>
+    <string name="notification_channel_description_foreground_service">显示 E•CAL 正在执行的后台任务</string>
+    <string name="notification_title_reconciling_alarms">正在更新提醒…</string>
+    <string name="notification_text_reconciling_alarms">E•CAL 正在更新已安排的提醒。</string>
 </resources>

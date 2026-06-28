@@ -8,6 +8,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import net.k74n3xz.ecal.data.calendar.database.dao.AlarmComponentDao
+import net.k74n3xz.ecal.data.calendar.database.dao.AlarmDao
+import net.k74n3xz.ecal.data.calendar.database.dao.AlarmInstanceDao
 import net.k74n3xz.ecal.data.calendar.database.dao.EventComponentDao
 import javax.inject.Singleton
 
@@ -27,12 +29,22 @@ object CalendarDatabaseModule {
     }
 
     @Provides
-    fun provideEventDao(db: CalendarDatabase): EventComponentDao {
-        return db.eventDao()
+    fun provideEventComponentDao(db: CalendarDatabase): EventComponentDao {
+        return db.eventComponentDao()
     }
 
     @Provides
-    fun provideAlarmDao(db: CalendarDatabase): AlarmComponentDao {
+    fun provideAlarmComponentDao(db: CalendarDatabase): AlarmComponentDao {
+        return db.alarmComponentDao()
+    }
+
+    @Provides
+    fun provideAlarmInstanceDao(db: CalendarDatabase): AlarmInstanceDao {
+        return db.alarmInstanceDao()
+    }
+
+    @Provides
+    fun provideAlarmDao(db: CalendarDatabase): AlarmDao {
         return db.alarmDao()
     }
 }

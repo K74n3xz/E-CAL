@@ -1,4 +1,4 @@
-package net.k74n3xz.ecal
+package net.k74n3xz.ecal.android.components.activity
 
 import android.Manifest
 import android.app.AlarmManager
@@ -17,6 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
+import net.k74n3xz.ecal.android.components.activity.viewmodel.AppSettingsViewModel
 import net.k74n3xz.ecal.ui.compositionlocal.LocalTimeZone
 import net.k74n3xz.ecal.ui.module.AppNavHost
 import net.k74n3xz.ecal.ui.theme.ECALTheme

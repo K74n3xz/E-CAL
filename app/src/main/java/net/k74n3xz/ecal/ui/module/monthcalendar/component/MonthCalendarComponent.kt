@@ -1,5 +1,6 @@
 package net.k74n3xz.ecal.ui.module.monthcalendar.component
 
+import android.text.format.DateFormat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -54,7 +55,7 @@ fun MonthCalendarComponent(
 ) {
     val coroutineScope = rememberCoroutineScope()
 
-    // TODO: Choose a bounded month range that matches the app's supported calendar scope.
+    // TODO: Define supported calendar bounds centrally instead of hard-coding them in this component.
     val calenderState = rememberCalendarState(
         startMonth = YearMonth.of(1900, 1),
         endMonth = YearMonth.of(2999, 12),
@@ -85,7 +86,10 @@ fun MonthCalendarComponent(
             Text(
                 text = it.yearMonth.format(
                     DateTimeFormatter.ofPattern(
-                        "yyyy MMMM",
+                        DateFormat.getBestDateTimePattern(
+                            LocalLocale.current.platformLocale,
+                            "yMMMM"
+                        ),
                         LocalLocale.current.platformLocale
                     )
                 ),

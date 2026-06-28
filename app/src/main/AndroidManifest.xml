@@ -2,12 +2,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE"
+        tools:ignore="ForegroundServicesPolicy" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
     <application
-        android:name=".ECalApplication"
+        android:name=".android.components.ECalApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -17,7 +20,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ECAL">
         <activity
-            android:name=".MainActivity"
+            android:name=".android.components.activity.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.ECAL">
             <intent-filter>
@@ -28,15 +31,20 @@
         </activity>
 
         <receiver
-            android:name=".reminder.ReminderReceiver"
+            android:name=".android.components.receiver.AlarmReceiver"
             android:exported="false" />
         <receiver
-            android:name=".reminder.BootReceiver"
+            android:name=".android.components.receiver.BootReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+
+        <service
+            android:name=".android.components.service.AlarmReconciliationService"
+            android:exported="false"
+            android:foregroundServiceType="shortService" />
     </application>
 
 </manifest>

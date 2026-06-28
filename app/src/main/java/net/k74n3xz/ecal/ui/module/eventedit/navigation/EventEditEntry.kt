@@ -82,13 +82,12 @@ fun EntryProviderScope<NavKey>.registerEventEditEntry(
                     onCancel = backToParent,
                     onSave = { newEvent, newAlarms ->
                         var e = newEvent
-                        /* TODO: Validate events while editing and surface errors instead of silently correcting values. */
+                        // TODO: Move event validation into a shared validator and show errors instead of coercing endAt.
                         val startAt = newEvent.startAt
                         val endAt = newEvent.endAt
                         if (endAt != null && endAt.isBefore(startAt)) {
                             e = e.copy(endAt = startAt)
                         }
-                        /* TODO: Move Event and EventComponent validation rules into a dedicated validation package. */
 
                         val updatedAt = Instant.now()
                         e = if (it.eventUid == null) {
@@ -99,8 +98,7 @@ fun EntryProviderScope<NavKey>.registerEventEditEntry(
                         } else {
                             e.copy(updatedAt = updatedAt)
                         }
-                        viewModel.saveEvent(e)
-                        viewModel.replaceAlarmsForEvent(e, newAlarms)
+                        viewModel.saveEventAndApplyAlarms(e, newAlarms)
                         backToParent()
                     },
                     modifier = Modifier.padding(innerPadding)

@@ -41,9 +41,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import net.k74n3xz.ecal.R
-import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.EventStatus
-import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.TimeTransparency
-import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.TriggerRelationship
+import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.eventcomponent.EventStatus
+import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.eventcomponent.TimeTransparency
+import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.alarmcomponent.TriggerRelationship
 import net.k74n3xz.ecal.data.calendar.model.Alarm
 import net.k74n3xz.ecal.data.calendar.model.Event
 import net.k74n3xz.ecal.data.calendar.utils.generateEventUid
@@ -239,7 +239,7 @@ fun EventEditScreen(
                         modifier = Modifier.weight(0.62f)
                     )
 
-                    // TODO: Animate time field visibility changes for start and end rows.
+                    // TODO: Animate the start and end time fields when all-day mode changes.
                     if (!isAllDayEvent) {
                         TimeFieldComponent(
                             time = startTime,
@@ -426,7 +426,7 @@ fun EventEditScreen(
 
             // Alarms
             mutableAlarms.forEachIndexed { index, alarm ->
-                // TODO: Animate alarm card insertion and removal.
+                // TODO: Animate alarm cards when reminders are added or removed.
                 Spacer(modifier = Modifier.height(16.dp))
 
                 AlarmCardEditComponent(
@@ -453,7 +453,7 @@ fun EventEditScreen(
                                 action = Alarm.Action.Display(""),
                                 trigger = Alarm.Trigger.RelativeTrigger(
                                     relativeTo = TriggerRelationship.START,
-                                    offset = Duration.ofMinutes(15)
+                                    offset = Duration.ofMinutes(-15)
                                 ),
                                 interval = null,
                                 repeat = null

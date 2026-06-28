@@ -1,8 +1,8 @@
 package net.k74n3xz.ecal.data.calendar.model
 
 import androidx.annotation.IntRange
-import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.TimeTransparency
-import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.EventStatus
+import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.eventcomponent.TimeTransparency
+import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.eventcomponent.EventStatus
 import net.k74n3xz.ecal.data.calendar.utils.generateEventUid
 import java.time.Instant
 

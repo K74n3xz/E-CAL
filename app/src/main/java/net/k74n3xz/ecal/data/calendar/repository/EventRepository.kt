@@ -20,14 +20,14 @@ class EventRepository @Inject constructor(private val eventComponentDao: EventCo
 
     fun upsertEvent(event: Event) {
         eventComponentDao.upsert(
-            event = event.toEventComponent(
+            event.toEventComponent(
                 originalIcs = eventComponentDao.queryEventComponentByUid(event.uid)?.rawIcs
             )
         )
     }
 
-    fun deleteEvent(event: Event) {
-        eventComponentDao.delete(event.toEventComponent())
+    fun deleteEventByUid(eventUid: String) {
+        eventComponentDao.deleteByUid(eventUid)
     }
 
     fun getEventOverlappingInCloseRange(from: ZonedDateTime, to: ZonedDateTime): Flow<List<Event>> =

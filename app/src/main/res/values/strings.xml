@@ -59,4 +59,8 @@
     <string name="notification_channel_description_reminders">Reminder notifications from E•CAL</string>
     <string name="notification_default_title_reminder">Reminder</string>
     <string name="notification_default_text_reminder">You have a reminder.</string>
+    <string name="notification_channel_name_foreground_service">E•CAL background activity</string>
+    <string name="notification_channel_description_foreground_service">Shows when E•CAL is performing background work</string>
+    <string name="notification_title_reconciling_alarms">Updating reminders…</string>
+    <string name="notification_text_reconciling_alarms">E•CAL is updating scheduled reminders.</string>
 </resources>
