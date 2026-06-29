@@ -15,9 +15,10 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
-import net.k74n3xz.ecal.data.calendar.model.Event
-import net.k74n3xz.ecal.data.calendar.repository.EventRepository
 import net.k74n3xz.ecal.data.settings.repository.AppSettingsRepository
+import net.k74n3xz.ecal.domain.model.Event
+import net.k74n3xz.ecal.domain.repository.EventRepository
+import net.k74n3xz.ecal.utils.atEndOfDay
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -51,7 +52,7 @@ class MonthCalenderViewModel @Inject constructor(
                     timeZone
                 )
 
-                eventRepository.getEventOverlappingInCloseRange(leftBound, rightBound)
+                eventRepository.observeEventsOverlappingRange(leftBound, rightBound)
             }
             .combine(timeZone) { events, timeZone -> events to timeZone }
             .mapLatest { (events, timeZone) ->
@@ -76,7 +77,10 @@ class MonthCalenderViewModel @Inject constructor(
         selectedDate
             .combine(timeZone) { localDate, timeZone -> localDate to timeZone }
             .flatMapLatest { (localDate, timeZone) ->
-                eventRepository.getEventCoveringDate(localDate, timeZone)
+                eventRepository.observeEventsOverlappingRange(
+                    localDate.atStartOfDay(timeZone),
+                    localDate.atEndOfDay(timeZone)
+                )
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 }

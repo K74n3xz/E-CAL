@@ -18,8 +18,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import net.k74n3xz.ecal.R
-import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.eventcomponent.EventStatus
-import net.k74n3xz.ecal.data.calendar.model.Event
+import net.k74n3xz.ecal.domain.model.enumeration.event.EventStatus
+import net.k74n3xz.ecal.domain.model.Event
 import net.k74n3xz.ecal.data.calendar.utils.generateEventUid
 import net.k74n3xz.ecal.ui.compositionlocal.LocalTimeZone
 import net.k74n3xz.ecal.ui.module.monthcalendar.component.EventListComponent

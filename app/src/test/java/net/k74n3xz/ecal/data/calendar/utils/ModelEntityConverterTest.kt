@@ -1,10 +1,10 @@
 package net.k74n3xz.ecal.data.calendar.utils
 
-import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.alarmcomponent.TriggerRelationship
-import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.eventcomponent.EventStatus
-import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.eventcomponent.TimeTransparency
-import net.k74n3xz.ecal.data.calendar.model.Alarm
-import net.k74n3xz.ecal.data.calendar.model.Event
+import net.k74n3xz.ecal.domain.model.enumeration.alarm.TriggerRelationship
+import net.k74n3xz.ecal.domain.model.enumeration.event.EventStatus
+import net.k74n3xz.ecal.domain.model.enumeration.event.TimeTransparency
+import net.k74n3xz.ecal.domain.model.Alarm
+import net.k74n3xz.ecal.domain.model.Event
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
@@ -32,7 +32,7 @@ class ModelEntityConverterTest {
 
         val entity = event.toEventComponent()
 
-        assertEquals(event, entity.toEvent())
+        assertEquals(event, entity.toEvent(emptyList()))
         assertTrue(entity.rawIcs.contains("BEGIN:VEVENT"))
         assertTrue(entity.rawIcs.contains("UID:event-123"))
         assertTrue(entity.rawIcs.contains("SUMMARY:Planning"))
@@ -49,7 +49,7 @@ class ModelEntityConverterTest {
 
         assertTrue(entity.rawIcs.contains("DTSTART;VALUE=DATE:20260628"))
         assertTrue(entity.rawIcs.contains("DTEND;VALUE=DATE:20260629"))
-        assertTrue(entity.toEvent().isAllDayEvent)
+        assertTrue(entity.toEvent(emptyList()).isAllDayEvent)
     }
 
     @Test
@@ -59,14 +59,14 @@ class ModelEntityConverterTest {
             summary = "Old",
             startAt = Instant.parse("2026-06-28T01:00:00Z")
         ).toEventComponent()
-        val updated = original.toEvent().copy(
+        val updated = original.toEvent(emptyList()).copy(
             summary = "New",
             updatedAt = Instant.parse("2026-06-29T01:00:00Z")
         )
 
         val result = updated.toEventComponent(original.rawIcs)
 
-        assertEquals(updated, result.toEvent())
+        assertEquals(updated, result.toEvent(emptyList()))
         assertTrue(result.rawIcs.contains("SUMMARY:New"))
     }
 
@@ -107,7 +107,7 @@ class ModelEntityConverterTest {
             "X-ECAL-TEST:keep-me\r\nEND:VEVENT"
         )
 
-        val result = original.toEvent().copy(summary = "New")
+        val result = original.toEvent(emptyList()).copy(summary = "New")
             .toEventComponent(withCustomProperty)
 
         assertTrue(result.rawIcs.contains("X-ECAL-TEST:keep-me"))
@@ -154,7 +154,6 @@ class ModelEntityConverterTest {
     fun relativeDisplayAlarm_roundTripsWithRepeat() {
         val alarm = Alarm(
             id = 42,
-            refUid = "event-1",
             action = Alarm.Action.Display("Leave now"),
             trigger = Alarm.Trigger.RelativeTrigger(
                 TriggerRelationship.END,
@@ -164,7 +163,7 @@ class ModelEntityConverterTest {
             repeat = 3
         )
 
-        val entity = alarm.toAlarmComponent()
+        val entity = alarm.toAlarmComponent("event-1")
 
         assertEquals(alarm, entity.toAlarm())
         assertTrue(entity.rawIcs.contains("ACTION:DISPLAY"))
@@ -176,14 +175,13 @@ class ModelEntityConverterTest {
     fun absoluteDisplayAlarm_roundTrips() {
         val alarm = Alarm(
             id = 7,
-            refUid = "event-1",
             action = Alarm.Action.Display("Call"),
             trigger = Alarm.Trigger.AbsoluteTrigger(
                 Instant.parse("2026-06-28T01:30:00Z")
             )
         )
 
-        val entity = alarm.toAlarmComponent()
+        val entity = alarm.toAlarmComponent("event-1")
 
         assertEquals(alarm, entity.toAlarm())
         assertTrue(entity.rawIcs.contains("TRIGGER"))
@@ -194,16 +192,15 @@ class ModelEntityConverterTest {
     fun alarmConversion_updatesExistingIcs() {
         val original = Alarm(
             id = 5,
-            refUid = "event-1",
             action = Alarm.Action.Display("Old"),
             trigger = Alarm.Trigger.RelativeTrigger(offset = Duration.ofMinutes(-5))
-        ).toAlarmComponent()
+        ).toAlarmComponent("event-1")
         val updated = original.toAlarm().copy(
             action = Alarm.Action.Display("New"),
             trigger = Alarm.Trigger.RelativeTrigger(offset = Duration.ofMinutes(-15))
         )
 
-        val result = updated.toAlarmComponent(original.rawIcs)
+        val result = updated.toAlarmComponent("event-1", original.rawIcs)
 
         assertEquals(updated, result.toAlarm())
         assertTrue(result.rawIcs.contains("DESCRIPTION:New"))
@@ -213,7 +210,6 @@ class ModelEntityConverterTest {
     @Test
     fun relativeDisplayAlarm_supportsPositiveStartOffsetWithoutRepeat() {
         val alarm = Alarm(
-            refUid = "event-1",
             action = Alarm.Action.Display("Follow up"),
             trigger = Alarm.Trigger.RelativeTrigger(
                 TriggerRelationship.START,
@@ -221,7 +217,7 @@ class ModelEntityConverterTest {
             )
         )
 
-        val entity = alarm.toAlarmComponent()
+        val entity = alarm.toAlarmComponent("event-1")
 
         assertEquals(alarm, entity.toAlarm())
         assertEquals(null, entity.interval)
@@ -236,13 +232,12 @@ class ModelEntityConverterTest {
             startAt = Instant.parse("2026-06-28T01:00:00Z")
         ).toEventComponent().rawIcs
         val alarm = Alarm(
-            refUid = "event-1",
             action = Alarm.Action.Display("Reminder"),
             trigger = Alarm.Trigger.RelativeTrigger(offset = Duration.ZERO)
         )
 
         val error = assertThrows(IllegalArgumentException::class.java) {
-            alarm.toAlarmComponent(eventIcs)
+            alarm.toAlarmComponent("event-1", eventIcs)
         }
         assertEquals("Unrecognized ICS content.", error.message)
     }
@@ -250,11 +245,10 @@ class ModelEntityConverterTest {
     @Test
     fun alarmConversion_rejectsCalendarWithMultipleAlarms() {
         val alarm = Alarm(
-            refUid = "event-1",
             action = Alarm.Action.Display("Reminder"),
             trigger = Alarm.Trigger.RelativeTrigger(offset = Duration.ZERO)
         )
-        val rawIcs = alarm.toAlarmComponent().rawIcs
+        val rawIcs = alarm.toAlarmComponent("event-1").rawIcs
         val alarmBlock = rawIcs.substringAfter("BEGIN:VALARM").substringBefore("END:VALARM")
         val invalid = rawIcs.replace(
             "END:VEVENT",
@@ -262,7 +256,7 @@ class ModelEntityConverterTest {
         )
 
         val error = assertThrows(IllegalArgumentException::class.java) {
-            alarm.toAlarmComponent(invalid)
+            alarm.toAlarmComponent("event-1", invalid)
         }
         assertEquals("Unrecognized ICS content.", error.message)
     }

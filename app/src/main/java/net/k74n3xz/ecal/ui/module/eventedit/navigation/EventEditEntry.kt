@@ -20,7 +20,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import net.k74n3xz.ecal.R
-import net.k74n3xz.ecal.data.calendar.model.Event
+import net.k74n3xz.ecal.domain.model.Event
 import net.k74n3xz.ecal.ui.module.eventedit.component.DeletionConfirmationDialog
 import net.k74n3xz.ecal.ui.module.eventedit.component.scaffold.EventEditScreenTopBarComponent
 import net.k74n3xz.ecal.ui.module.eventedit.screen.EventEditScreen
@@ -36,15 +36,12 @@ fun EntryProviderScope<NavKey>.registerEventEditEntry(
         val viewModel: EventEditViewModel = hiltViewModel()
 
         val event by viewModel.event.collectAsStateWithLifecycle()
-        val alarms by viewModel.alarms.collectAsStateWithLifecycle()
-        val isEventLoaded = event != null
-        val areAlarmsLoaded = alarms != null
-        val isLoadingComplete = isEventLoaded && areAlarmsLoaded
+        val isLoadingComplete = event != null
         var isConfirmingDeletion by rememberSaveable { mutableStateOf(false) }
 
         if (isEditMode) {
             LaunchedEffect(Unit) {
-                viewModel.loadEventWithAlarmsByUid(it.eventUid)
+                viewModel.loadEventByUid(it.eventUid)
             }
         }
 
@@ -78,9 +75,9 @@ fun EntryProviderScope<NavKey>.registerEventEditEntry(
             } else {
                 EventEditScreen(
                     event = if (!isEditMode) Event() else event!!,
-                    alarms = if (!isEditMode) emptyList() else alarms!!,
+                    alarms = if (!isEditMode) emptyList() else event!!.alarms,
                     onCancel = backToParent,
-                    onSave = { newEvent, newAlarms ->
+                    onSave = { newEvent ->
                         var e = newEvent
                         // TODO: Move event validation into a shared validator and show errors instead of coercing endAt.
                         val startAt = newEvent.startAt
@@ -98,7 +95,7 @@ fun EntryProviderScope<NavKey>.registerEventEditEntry(
                         } else {
                             e.copy(updatedAt = updatedAt)
                         }
-                        viewModel.saveEventAndApplyAlarms(e, newAlarms)
+                        viewModel.saveEvent(e)
                         backToParent()
                     },
                     modifier = Modifier.padding(innerPadding)

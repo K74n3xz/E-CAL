@@ -24,12 +24,14 @@ import net.fortuna.ical4j.model.property.Transp
 import net.fortuna.ical4j.model.property.Trigger
 import net.fortuna.ical4j.model.property.Uid
 import net.k74n3xz.ecal.data.calendar.database.entity.AlarmComponent
+import net.k74n3xz.ecal.data.calendar.database.entity.AlarmInstance
 import net.k74n3xz.ecal.data.calendar.database.entity.EventComponent
-import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.alarmcomponent.Action
-import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.alarmcomponent.TriggerRelationship
-import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.alarmcomponent.TriggerType
-import net.k74n3xz.ecal.data.calendar.model.Alarm
-import net.k74n3xz.ecal.data.calendar.model.Event
+import net.k74n3xz.ecal.domain.model.enumeration.alarm.Action
+import net.k74n3xz.ecal.domain.model.enumeration.alarm.TriggerRelationship
+import net.k74n3xz.ecal.domain.model.enumeration.alarm.TriggerType
+import net.k74n3xz.ecal.domain.model.Alarm
+import net.k74n3xz.ecal.domain.model.AlarmOccurrence
+import net.k74n3xz.ecal.domain.model.Event
 import java.io.StringReader
 import java.time.Duration
 import java.time.Instant
@@ -37,7 +39,7 @@ import java.time.Instant
 // TODO: Replace this prototype PRODID with the final stable product identifier before release.
 private const val PROD_ID: String = "-//K74n3xz//E·CAL prototype//ZH-CN"
 
-fun EventComponent.toEvent(): Event = Event(
+fun EventComponent.toEvent(alarms: List<Alarm>): Event = Event(
     uid,
     createdAt,
     updatedAt,
@@ -50,7 +52,8 @@ fun EventComponent.toEvent(): Event = Event(
     priority,
     transparency,
     recurrenceRule,
-    status
+    status,
+    alarms
 )
 
 fun Event.toEventComponent(originalIcs: String? = null): EventComponent {
@@ -170,7 +173,6 @@ fun Event.toEventComponent(originalIcs: String? = null): EventComponent {
 
 fun AlarmComponent.toAlarm(): Alarm = Alarm(
     id,
-    refUid,
     when (action) {
         Action.DISPLAY -> Alarm.Action.Display(
             description
@@ -196,7 +198,7 @@ fun AlarmComponent.toAlarm(): Alarm = Alarm(
     repeat
 )
 
-fun Alarm.toAlarmComponent(originalIcs: String? = null): AlarmComponent {
+fun Alarm.toAlarmComponent(referenceUid: String, originalIcs: String? = null): AlarmComponent {
     val actionType: Action
     val description: String?
     val summary: String?
@@ -321,7 +323,7 @@ fun Alarm.toAlarmComponent(originalIcs: String? = null): AlarmComponent {
 
     return AlarmComponent(
         id,
-        refUid,
+        referenceUid,
         actionType,
         description,
         triggerType,
@@ -334,3 +336,9 @@ fun Alarm.toAlarmComponent(originalIcs: String? = null): AlarmComponent {
         rawIcs
     )
 }
+
+fun AlarmInstance.toAlarmOccurrence(): AlarmOccurrence = AlarmOccurrence(
+    id!!,
+    alarmComponentId,
+    triggerAt
+)

@@ -11,9 +11,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import net.k74n3xz.ecal.R
+import net.k74n3xz.ecal.android.helper.alarm.AlarmHelper
 import net.k74n3xz.ecal.android.helper.notification.ForegroundServiceNotificationHelper
-import net.k74n3xz.ecal.android.utils.AlarmReconciler
+import net.k74n3xz.ecal.domain.repository.AlarmRepository
 import javax.inject.Inject
 import net.k74n3xz.ecal.android.constant.Notification as NotificationConstant
 
@@ -24,12 +27,16 @@ class AlarmReconciliationService : Service() {
     }
 
     @Inject
-    lateinit var alarmReconciler: AlarmReconciler
+    lateinit var alarmRepository: AlarmRepository
+
+    @Inject
+    lateinit var alarmHelper: AlarmHelper
 
     @Inject
     lateinit var foregroundServiceNotificationHelper: ForegroundServiceNotificationHelper
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val reconciliationMutex: Mutex = Mutex()
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         ServiceCompat.startForeground(
@@ -47,11 +54,25 @@ class AlarmReconciliationService : Service() {
             else FOREGROUND_SERVICE_TYPE_NONE_COMPAT
         )
         serviceScope.launch {
-            alarmReconciler.reconcileAlarmInstances()
+            reconciliationMutex.withLock {
+                reconcileAlarmOccurrences()
+            }
             stopSelf(startId)
         }
         return START_NOT_STICKY
     }
 
     override fun onBind(intent: Intent): IBinder? = null
+
+    private suspend fun reconcileAlarmOccurrences() {
+        val (alarmsToCancel, alarmsToSchedule) = alarmRepository.getAlarmOccurrenceNeedingReconciliation()
+        alarmsToCancel.forEach {
+            alarmHelper.cancel(it.id)
+            alarmRepository.markAlarmOccurrenceAsCancelled(it.id)
+        }
+        alarmsToSchedule.forEach {
+            alarmHelper.schedule(it.id, it.triggerAt.toEpochMilli())
+            alarmRepository.markAlarmOccurrenceAsScheduled(it.id)
+        }
+    }
 }

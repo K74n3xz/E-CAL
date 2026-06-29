@@ -1,8 +1,8 @@
 package net.k74n3xz.ecal.data.calendar.database.entity
 
-import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.alarmcomponent.Action
-import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.alarmcomponent.TriggerRelationship
-import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.alarmcomponent.TriggerType
+import net.k74n3xz.ecal.domain.model.enumeration.alarm.Action
+import net.k74n3xz.ecal.domain.model.enumeration.alarm.TriggerRelationship
+import net.k74n3xz.ecal.domain.model.enumeration.alarm.TriggerType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Test

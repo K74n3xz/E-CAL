@@ -10,7 +10,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
-import net.k74n3xz.ecal.data.calendar.model.Event
+import net.k74n3xz.ecal.domain.model.Event
 import net.k74n3xz.ecal.ui.module.monthcalendar.component.scaffold.AddEventFabComponent
 import net.k74n3xz.ecal.ui.module.monthcalendar.screen.MonthCalendarScreen
 import net.k74n3xz.ecal.ui.module.monthcalendar.viewmodel.MonthCalenderViewModel

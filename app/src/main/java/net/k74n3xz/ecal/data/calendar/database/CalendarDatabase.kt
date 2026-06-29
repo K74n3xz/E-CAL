@@ -8,6 +8,7 @@ import net.k74n3xz.ecal.data.calendar.database.dao.AlarmComponentDao
 import net.k74n3xz.ecal.data.calendar.database.dao.AlarmDao
 import net.k74n3xz.ecal.data.calendar.database.dao.AlarmInstanceDao
 import net.k74n3xz.ecal.data.calendar.database.dao.EventComponentDao
+import net.k74n3xz.ecal.data.calendar.database.dao.EventDao
 import net.k74n3xz.ecal.data.calendar.database.entity.AlarmComponent
 import net.k74n3xz.ecal.data.calendar.database.entity.AlarmInstance
 import net.k74n3xz.ecal.data.calendar.database.entity.EventComponent
@@ -25,5 +26,6 @@ abstract class CalendarDatabase : RoomDatabase() {
     abstract fun eventComponentDao(): EventComponentDao
     abstract fun alarmComponentDao(): AlarmComponentDao
     abstract fun alarmInstanceDao(): AlarmInstanceDao
+    abstract fun eventDao(): EventDao
     abstract fun alarmDao(): AlarmDao
 }

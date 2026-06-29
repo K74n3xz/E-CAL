@@ -1,6 +1,6 @@
 package net.k74n3xz.ecal.data.calendar.utils
 
-import net.k74n3xz.ecal.data.calendar.model.Event
+import net.k74n3xz.ecal.domain.model.Event
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle

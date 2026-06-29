@@ -45,8 +45,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.text.isDigitsOnly
 import net.k74n3xz.ecal.R
-import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.alarmcomponent.TriggerRelationship
-import net.k74n3xz.ecal.data.calendar.model.Alarm
+import net.k74n3xz.ecal.domain.model.enumeration.alarm.TriggerRelationship
+import net.k74n3xz.ecal.domain.model.Alarm
 import net.k74n3xz.ecal.ui.compositionlocal.LocalTimeZone
 import java.time.Duration
 import java.time.LocalDateTime
@@ -381,7 +381,6 @@ private fun AlarmCardEditComponentPreview() {
         mutableStateOf(
             Alarm(
                 id = null,
-                refUid = "Example Event UID",
                 action = Alarm.Action.Display("This is an example description."),
                 trigger = Alarm.Trigger.RelativeTrigger(
                     relativeTo = TriggerRelationship.START,

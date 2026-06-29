@@ -14,7 +14,8 @@ import kotlinx.coroutines.launch
 import net.k74n3xz.ecal.R
 import net.k74n3xz.ecal.android.constant.Notification as NotificationConstant
 import net.k74n3xz.ecal.android.helper.notification.ReminderNotificationHelper
-import net.k74n3xz.ecal.data.calendar.repository.AlarmRepository
+import net.k74n3xz.ecal.application.port.AlarmOccurrenceReconciler
+import net.k74n3xz.ecal.domain.repository.AlarmRepository
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -27,6 +28,9 @@ class AlarmReceiver : BroadcastReceiver() {
     lateinit var alarmRepository: AlarmRepository
 
     @Inject
+    lateinit var alarmOccurrenceReconciler: AlarmOccurrenceReconciler
+
+    @Inject
     lateinit var reminderNotificationHelper: ReminderNotificationHelper
 
     private val receiverScope = CoroutineScope(Dispatchers.IO)
@@ -35,12 +39,12 @@ class AlarmReceiver : BroadcastReceiver() {
         val pendingResult = goAsync()
 
         receiverScope.launch {
-            val alarmInstanceId: Long? = intent.data?.lastPathSegment?.toLong()
+            val alarmOccurrenceId: Long? = intent.data?.lastPathSegment?.toLong()
 
             val title =
                 context.applicationContext.getString(R.string.notification_default_title_reminder)
             val text =
-                alarmInstanceId?.let { alarmRepository.getAlarmDescriptionByAlarmInstanceId(it) }
+                alarmOccurrenceId?.let { alarmRepository.getAlarmDescriptionByAlarmOccurrenceId(it) }
                     ?: context.getString(R.string.notification_default_text_reminder)
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
@@ -52,7 +56,7 @@ class AlarmReceiver : BroadcastReceiver() {
                 )
             } else {
                 reminderNotificationHelper.showNotification(
-                    tag = alarmInstanceId?.let {
+                    tag = alarmOccurrenceId?.let {
                         NotificationConstant.Tag.REMINDER_NOTIFICATION_TAG(
                             it
                         )
@@ -63,8 +67,9 @@ class AlarmReceiver : BroadcastReceiver() {
                 )
             }
 
-            if (alarmInstanceId != null) {
-                alarmRepository.deactivateAlarmInstance(alarmInstanceId)
+            if (alarmOccurrenceId != null) {
+                alarmRepository.handleAlarmOccurrenceRinging(alarmOccurrenceId)
+                alarmOccurrenceReconciler.reconcileAlarmOccurrences()
             }
 
             pendingResult.finish()

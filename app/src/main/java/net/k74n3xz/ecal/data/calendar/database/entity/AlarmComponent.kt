@@ -4,9 +4,9 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.alarmcomponent.Action
-import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.alarmcomponent.TriggerRelationship
-import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.alarmcomponent.TriggerType
+import net.k74n3xz.ecal.domain.model.enumeration.alarm.Action
+import net.k74n3xz.ecal.domain.model.enumeration.alarm.TriggerRelationship
+import net.k74n3xz.ecal.domain.model.enumeration.alarm.TriggerType
 import java.time.Duration
 import java.time.Instant
 

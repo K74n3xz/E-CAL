@@ -11,6 +11,7 @@ import net.k74n3xz.ecal.data.calendar.database.dao.AlarmComponentDao
 import net.k74n3xz.ecal.data.calendar.database.dao.AlarmDao
 import net.k74n3xz.ecal.data.calendar.database.dao.AlarmInstanceDao
 import net.k74n3xz.ecal.data.calendar.database.dao.EventComponentDao
+import net.k74n3xz.ecal.data.calendar.database.dao.EventDao
 import javax.inject.Singleton
 
 @Module
@@ -41,6 +42,11 @@ object CalendarDatabaseModule {
     @Provides
     fun provideAlarmInstanceDao(db: CalendarDatabase): AlarmInstanceDao {
         return db.alarmInstanceDao()
+    }
+
+    @Provides
+    fun provideEventDao(db: CalendarDatabase): EventDao {
+        return db.eventDao()
     }
 
     @Provides

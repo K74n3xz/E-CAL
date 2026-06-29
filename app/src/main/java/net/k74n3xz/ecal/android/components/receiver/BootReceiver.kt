@@ -3,19 +3,21 @@ package net.k74n3xz.ecal.android.components.receiver
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import net.k74n3xz.ecal.android.components.service.AlarmReconciliationService
-import net.k74n3xz.ecal.data.calendar.repository.AlarmRepository
+import net.k74n3xz.ecal.application.port.AlarmOccurrenceReconciler
+import net.k74n3xz.ecal.domain.repository.AlarmRepository
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class BootReceiver : BroadcastReceiver() {
     @Inject
     lateinit var alarmRepository: AlarmRepository
+
+    @Inject
+    lateinit var alarmOccurrenceReconciler: AlarmOccurrenceReconciler
 
     private val receiverScope = CoroutineScope(Dispatchers.IO)
 
@@ -27,18 +29,8 @@ class BootReceiver : BroadcastReceiver() {
         val pendingResult = goAsync()
 
         receiverScope.launch {
-            alarmRepository.markAllAlarmsAsCancelled()
-
-            val startServiceIntent =
-                Intent(context.applicationContext, AlarmReconciliationService::class.java)
-            context.applicationContext.let {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    it.startForegroundService(startServiceIntent)
-                } else {
-                    it.startService(startServiceIntent)
-                }
-            }
-
+            alarmRepository.markAllAlarmOccurrencesAsCancelled()
+            alarmOccurrenceReconciler.reconcileAlarmOccurrences()
             pendingResult.finish()
         }
     }

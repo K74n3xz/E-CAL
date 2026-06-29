@@ -1,13 +1,12 @@
-package net.k74n3xz.ecal.data.calendar.model
+package net.k74n3xz.ecal.domain.model
 
 import android.net.Uri
-import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.alarmcomponent.TriggerRelationship
+import net.k74n3xz.ecal.domain.model.enumeration.alarm.TriggerRelationship
 import java.time.Duration
 import java.time.Instant
 
 data class Alarm(
     val id: Long? = null,
-    val refUid: String,
     val action: Action,
     val trigger: Trigger,
     val interval: Duration? = null,

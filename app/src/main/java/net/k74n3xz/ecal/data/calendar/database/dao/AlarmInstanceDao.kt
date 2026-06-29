@@ -44,4 +44,10 @@ interface AlarmInstanceDao {
         desiredState: DesiredState,
         excludedReconcileResult: ReconcileResult
     ): List<AlarmInstance>
+
+    @Query("SELECT alarmComponentId FROM alarm_instance WHERE id = :id")
+    fun queryAlarmComponentIdByAlarmInstanceId(id: Long): Long?
+
+    @Query("SELECT COUNT(*) FROM alarm_instance WHERE alarmComponentId = :alarmComponentId")
+    fun countByAlarmComponentId(alarmComponentId: Long): Long
 }

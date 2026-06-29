@@ -1,6 +1,6 @@
-package net.k74n3xz.ecal.data.calendar.model
+package net.k74n3xz.ecal.domain.model
 
-import net.k74n3xz.ecal.data.calendar.database.entity.enumeration.alarmcomponent.TriggerRelationship
+import net.k74n3xz.ecal.domain.model.enumeration.alarm.TriggerRelationship
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Test
@@ -26,7 +26,6 @@ class CalendarModelValidationTest {
     @Test
     fun alarm_acceptsIntervalAndRepeatTogether() {
         val alarm = Alarm(
-            refUid = "event-1",
             action = Alarm.Action.Display("Reminder"),
             trigger = Alarm.Trigger.RelativeTrigger(
                 TriggerRelationship.START,
@@ -44,7 +43,6 @@ class CalendarModelValidationTest {
     fun alarm_rejectsIncompleteRepeatPair() {
         val intervalOnlyError = assertThrows(IllegalArgumentException::class.java) {
             Alarm(
-                refUid = "event-1",
                 action = Alarm.Action.Display("Reminder"),
                 trigger = Alarm.Trigger.RelativeTrigger(offset = Duration.ZERO),
                 interval = Duration.ofMinutes(5)
@@ -52,7 +50,6 @@ class CalendarModelValidationTest {
         }
         val repeatOnlyError = assertThrows(IllegalArgumentException::class.java) {
             Alarm(
-                refUid = "event-1",
                 action = Alarm.Action.Display("Reminder"),
                 trigger = Alarm.Trigger.RelativeTrigger(offset = Duration.ZERO),
                 repeat = 2
