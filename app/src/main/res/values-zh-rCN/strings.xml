@@ -56,6 +56,7 @@
     <string name="button_content_description_switch_to_text_input">切换到文本输入</string>
     <string name="button_content_description_switch_to_clock_picker">切换到时钟选择器</string>
     <string name="calendar_day_content_description_select">选择 %1$s</string>
+    <string name="error_event_operation_failed">操作失败，请重试。</string>
     <string name="notification_channel_name_reminders">E•CAL 提醒</string>
     <string name="notification_channel_description_reminders">来自 E•CAL 的提醒通知</string>
     <string name="notification_default_title_reminder">提醒</string>

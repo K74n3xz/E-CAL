@@ -1,4 +1,4 @@
-package net.k74n3xz.ecal
+package net.k74n3xz.ecal.di
 
 import dagger.Binds
 import dagger.Module

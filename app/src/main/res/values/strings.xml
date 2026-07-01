@@ -55,6 +55,7 @@
     <string name="button_content_description_switch_to_text_input">Switch to text input</string>
     <string name="button_content_description_switch_to_clock_picker">Switch to clock picker</string>
     <string name="calendar_day_content_description_select">Select %1$s</string>
+    <string name="error_event_operation_failed">Something went wrong. Please try again.</string>
     <string name="notification_channel_name_reminders">E•CAL Reminders</string>
     <string name="notification_channel_description_reminders">Reminder notifications from E•CAL</string>
     <string name="notification_default_title_reminder">Reminder</string>

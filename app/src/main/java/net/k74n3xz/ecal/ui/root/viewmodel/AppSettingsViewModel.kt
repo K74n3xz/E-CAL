@@ -1,4 +1,4 @@
-package net.k74n3xz.ecal.android.components.activity.viewmodel
+package net.k74n3xz.ecal.ui.root.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

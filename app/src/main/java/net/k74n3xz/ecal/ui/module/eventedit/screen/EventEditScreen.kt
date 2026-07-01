@@ -63,7 +63,6 @@ import java.time.ZonedDateTime
 @Composable
 fun EventEditScreen(
     event: Event,
-    alarms: List<Alarm>,
     onCancel: () -> Unit,
     onSave: (Event) -> Unit,
     modifier: Modifier = Modifier
@@ -130,7 +129,7 @@ fun EventEditScreen(
         var status by rememberSaveable { mutableStateOf(event.status) }
 
         // Alarms
-        val mutableAlarms = rememberSaveable { alarms.toMutableStateList() }
+        val mutableAlarms = rememberSaveable { event.alarms.toMutableStateList() }
 
         Column(
             verticalArrangement = Arrangement.Top,
@@ -576,7 +575,6 @@ private fun EventEditScreenPreview1() {
         Surface(modifier = Modifier.fillMaxSize()) {
             EventEditScreen(
                 event = Event(),
-                alarms = emptyList(),
                 onCancel = {},
                 onSave = {}
             )
@@ -602,7 +600,6 @@ private fun EventEditScreenPreview2() {
                     endAt = Instant.now().plusSeconds(3600 * 2),
                     status = EventStatus.CONFIRMED
                 ),
-                alarms = emptyList(),
                 onCancel = {},
                 onSave = {}
             )

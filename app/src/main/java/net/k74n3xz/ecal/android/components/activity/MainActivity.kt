@@ -11,21 +11,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
 import androidx.core.net.toUri
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
-import net.k74n3xz.ecal.android.components.activity.viewmodel.AppSettingsViewModel
-import net.k74n3xz.ecal.ui.compositionlocal.LocalTimeZone
-import net.k74n3xz.ecal.ui.module.AppNavHost
-import net.k74n3xz.ecal.ui.theme.ECALTheme
+import net.k74n3xz.ecal.ui.root.AppRoot
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private val appSettingsViewModel: AppSettingsViewModel by viewModels()
-
     private val permissionRequestLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) {}
 
@@ -33,13 +24,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val timeZone by appSettingsViewModel.timeZone.collectAsStateWithLifecycle()
-
-            CompositionLocalProvider(LocalTimeZone provides timeZone) {
-                ECALTheme {
-                    AppNavHost()
-                }
-            }
+            AppRoot()
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
             && applicationContext.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
