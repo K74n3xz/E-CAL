@@ -2,8 +2,6 @@
 
 E-CAL is a local-first Android calendar app built with Kotlin and Jetpack Compose. It supports event editing, reminder notifications, and local persistence with Room, while modeling calendar data around iCalendar/RFC 5545 concepts.
 
-> Current status: prototype. The app has a working Compose UI, Room persistence, reminder scheduling, and bilingual resources, but import/export, repeat rules, reminder recovery, and test coverage are still in progress.
-
 ## Features
 
 - Month calendar view with busy-day markers
@@ -13,6 +11,7 @@ E-CAL is a local-first Android calendar app built with Kotlin and Jetpack Compos
 - DISPLAY reminders with absolute triggers or triggers relative to event start/end
 - Local Room database storage
 - Android reminder notifications through `AlarmManager` and `BroadcastReceiver`
+- Reminder reconciliation after device reboot
 - English and Simplified Chinese string resources
 
 ## Tech Stack
@@ -34,12 +33,11 @@ Dependency versions are managed in `gradle/libs.versions.toml`.
 
 ## Requirements
 
-- Android Studio version compatible with the Gradle and Android Gradle Plugin versions declared by the project
-- JDK version declared by the Gradle toolchain configuration
+- Android Studio and JDK versions compatible with the project's Gradle and Android Gradle Plugin configuration
 - Android SDK matching the project's compile SDK
-- Device or emulator running Android 7.0+ API 24
+- Device or emulator matching the project's minimum SDK
 
-See `app/build.gradle.kts` and the Gradle wrapper files for the authoritative SDK, JDK, and build-tool versions.
+See `app/build.gradle.kts`, `gradle/libs.versions.toml`, and the Gradle wrapper files for the authoritative SDK and build-tool requirements.
 
 ## Getting Started
 
@@ -104,7 +102,7 @@ Broadcast receiver
 Notification display
 ```
 
-The app declares `SCHEDULE_EXACT_ALARM`, `RECEIVE_BOOT_COMPLETED`, and `POST_NOTIFICATIONS`. `MainActivity` requests notification permission on Android 13+ and opens the exact-alarm settings flow on Android 12+ when needed.
+After a device reboot, a boot receiver marks persisted reminder occurrences for reconciliation and starts the scheduling flow again. The app also requests notification and exact-alarm access on Android versions that require them.
 
 ## Project Highlights
 
@@ -112,26 +110,7 @@ The app declares `SCHEDULE_EXACT_ALARM`, `RECEIVE_BOOT_COMPLETED`, and `POST_NOT
 - Room entities and app-facing models are separated by repository and converter layers.
 - Event and alarm models are designed around RFC 5545/iCalendar fields.
 - Reminder scheduling is connected end-to-end from event editing to Android notifications.
-- Runtime permission handling covers modern Android notification and exact alarm requirements.
-
-## Current Limitations
-
-- Exact alarms fall back to `setAndAllowWhileIdle` when exact scheduling is unavailable.
-- Reminder identifiers need a collision-resistant mapping for notification and pending-intent IDs.
-- Reminder recovery after device reboot is not complete yet.
-- Alarm row replacement and system reminder scheduling are not handled as one atomic workflow.
-- AUDIO and EMAIL alarms are modeled but not fully implemented in UI/conversion code.
-- Settings persistence still needs to be formalized.
-- Tests are still mostly Android template tests and do not yet cover repositories, Room converters, reminders, or UI flows.
-
-## Roadmap
-
-- Add iCalendar import/export
-- Expand recurrence rule support
-- Rebuild reminders after device reboot
-- Persist settings across app restarts
-- Add repository, database, reminder, and UI tests
-- Improve validation and unsaved-change handling in the event editor
+- Runtime permission handling covers notification and exact-alarm requirements where applicable.
 
 ## Contributing
 
