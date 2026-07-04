@@ -34,7 +34,7 @@ class RoomEventRepository @Inject constructor(
     private val alarmInstanceDao: AlarmInstanceDao,
     private val eventDao: EventDao
 ) : EventRepository {
-    companion object {
+    private companion object {
         private const val TAG: String = "RoomEventRepository"
     }
 
@@ -46,7 +46,7 @@ class RoomEventRepository @Inject constructor(
             }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override suspend fun observeEventsOverlappingRange(
+    override fun observeEventsOverlappingRange(
         rangeStart: ZonedDateTime,
         rangeEnd: ZonedDateTime
     ): Flow<List<Event>> =
@@ -63,9 +63,7 @@ class RoomEventRepository @Inject constructor(
 
     override suspend fun saveEvent(event: Event) {
         calendarDatabase.withTransaction {
-            eventComponentDao.upsert(
-                event.toEventComponent(eventComponentDao.queryEventComponentByUid(event.uid)?.rawIcs)
-            )
+            eventComponentDao.upsert(event.toEventComponent(eventComponentDao.queryRawIcsByUid(event.uid)))
             applyAlarmsForReferenceUnsafely(event.uid, event.alarms)
         }
     }
@@ -77,9 +75,8 @@ class RoomEventRepository @Inject constructor(
         }
     }
 
-    private fun applyAlarmsForReferenceUnsafely(referenceUid: String, alarms: List<Alarm>) {
-        val existingAlarmComponentIds =
-            alarmComponentDao.queryAlarmComponentIdsByRefUid(referenceUid).toSet()
+    private suspend fun applyAlarmsForReferenceUnsafely(referenceUid: String, alarms: List<Alarm>) {
+        val existingAlarmComponentIds = alarmComponentDao.queryIdsByRefUid(referenceUid).toSet()
         val alarmIdsNotNull = alarms.mapNotNull { it.id }.toSet()
 
         val alarmComponentIdsToUpdate = existingAlarmComponentIds intersect alarmIdsNotNull
@@ -95,15 +92,15 @@ class RoomEventRepository @Inject constructor(
         alarmComponentIdsToDelete.forEach { deleteAlarmByIdUnsafely(it) }
     }
 
-    private fun insertAlarmUnsafely(referenceUid: String, vararg alarms: Alarm) {
+    private suspend fun insertAlarmUnsafely(referenceUid: String, vararg alarms: Alarm) {
         alarmComponentDao.insert(*alarms.map { it.toAlarmComponent(referenceUid) }.toTypedArray())
             .forEach { instantiateFirstAlarmInstanceUnsafely(it) }
     }
 
-    private fun updateAlarmUnsafely(alarm: Alarm) {
+    private suspend fun updateAlarmUnsafely(alarm: Alarm) {
         val alarmId = alarm.id!!
 
-        val oldAlarmComponent = alarmComponentDao.queryAlarmComponentById(alarmId)
+        val oldAlarmComponent = alarmComponentDao.queryById(alarmId)
         val newAlarmComponent =
             alarm.toAlarmComponent(oldAlarmComponent.refUid, oldAlarmComponent.rawIcs)
         alarmInstanceDao.updateDesiredStateByAlarmComponentId(
@@ -115,7 +112,7 @@ class RoomEventRepository @Inject constructor(
         instantiateFirstAlarmInstanceUnsafely(alarmId)
     }
 
-    private fun deleteAlarmByIdUnsafely(alarmId: Long) {
+    private suspend fun deleteAlarmByIdUnsafely(alarmId: Long) {
         alarmInstanceDao.updateDesiredStateByAlarmComponentId(
             alarmComponentId = alarmId,
             desiredState = DesiredState.INACTIVE
@@ -124,12 +121,12 @@ class RoomEventRepository @Inject constructor(
         alarmComponentDao.deleteById(alarmId)
     }
 
-    private fun instantiateFirstAlarmInstanceUnsafely(alarmComponentId: Long) {
-        val alarmComponent = alarmComponentDao.queryAlarmComponentById(alarmComponentId)
+    private suspend fun instantiateFirstAlarmInstanceUnsafely(alarmComponentId: Long) {
+        val alarmComponent = alarmComponentDao.queryById(alarmComponentId)
 
         val firstTriggerTime = when (alarmComponent.triggerType) {
             TriggerType.RELATIVE -> {
-                val ref = eventComponentDao.queryEventComponentByUid(alarmComponent.refUid)!!
+                val ref = eventComponentDao.queryByUid(alarmComponent.refUid)!!
                 // TODO: Generalize reference lookup before alarms can target components other than events.
                 when (alarmComponent.triggerRelativeTo!!) {
                     TriggerRelationship.START -> ref.startAt

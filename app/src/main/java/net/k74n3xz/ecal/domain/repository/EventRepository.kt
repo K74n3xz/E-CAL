@@ -7,7 +7,7 @@ import java.time.ZonedDateTime
 interface EventRepository {
     suspend fun getEventByUid(uid: String): Event?
 
-    suspend fun observeEventsOverlappingRange(
+    fun observeEventsOverlappingRange(
         rangeStart: ZonedDateTime,
         rangeEnd: ZonedDateTime
     ): Flow<List<Event>>

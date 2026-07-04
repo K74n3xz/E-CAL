@@ -1,11 +1,15 @@
-package net.k74n3xz.ecal.di
+package net.k74n3xz.ecal
 
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import net.k74n3xz.ecal.android.port.AndroidAlarmOccurrenceReconciler
+import net.k74n3xz.ecal.android.port.AndroidAlarmScheduler
+import net.k74n3xz.ecal.android.port.AndroidNotificationPublisher
 import net.k74n3xz.ecal.application.port.AlarmOccurrenceReconciler
+import net.k74n3xz.ecal.application.port.AlarmScheduler
+import net.k74n3xz.ecal.application.port.NotificationPublisher
 import net.k74n3xz.ecal.data.calendar.repository.RoomAlarmRepository
 import net.k74n3xz.ecal.data.calendar.repository.RoomEventRepository
 import net.k74n3xz.ecal.domain.repository.AlarmRepository
@@ -22,4 +26,10 @@ interface ECALModule {
 
     @Binds
     fun bindAlarmOccurrenceReconciler(androidAlarmOccurrenceReconciler: AndroidAlarmOccurrenceReconciler): AlarmOccurrenceReconciler
+
+    @Binds
+    fun bindAlarmScheduler(androidAlarmScheduler: AndroidAlarmScheduler): AlarmScheduler
+
+    @Binds
+    fun bindNotificationPublisher(androidNotificationPublisher: AndroidNotificationPublisher): NotificationPublisher
 }

@@ -13,6 +13,6 @@ class SaveEventUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(event: Event) {
         eventRepository.saveEvent(event)
-        alarmOccurrenceReconciler.reconcileAlarmOccurrences()
+        alarmOccurrenceReconciler.request()
     }
 }

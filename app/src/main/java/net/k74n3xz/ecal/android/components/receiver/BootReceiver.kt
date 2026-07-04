@@ -19,7 +19,7 @@ class BootReceiver : BroadcastReceiver() {
     @Inject
     lateinit var alarmOccurrenceReconciler: AlarmOccurrenceReconciler
 
-    private val receiverScope = CoroutineScope(Dispatchers.IO)
+    private val receiverScope = CoroutineScope(Dispatchers.Default)
 
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Intent.ACTION_BOOT_COMPLETED) {
@@ -29,9 +29,12 @@ class BootReceiver : BroadcastReceiver() {
         val pendingResult = goAsync()
 
         receiverScope.launch {
-            alarmRepository.markAllAlarmOccurrencesAsCancelled()
-            alarmOccurrenceReconciler.reconcileAlarmOccurrences()
-            pendingResult.finish()
+            try {
+                alarmRepository.markAllAlarmOccurrencesAsCancelled()
+                alarmOccurrenceReconciler.request()
+            } finally {
+                pendingResult.finish()
+            }
         }
     }
 }

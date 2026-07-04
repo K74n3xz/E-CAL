@@ -3,7 +3,6 @@ package net.k74n3xz.ecal.ui.module.eventedit.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,13 +14,11 @@ import net.k74n3xz.ecal.domain.model.Event
 import net.k74n3xz.ecal.domain.repository.EventRepository
 import net.k74n3xz.ecal.ui.module.eventedit.viewmodel.state.EditMode
 import net.k74n3xz.ecal.ui.module.eventedit.viewmodel.state.EditOperationState
-import net.k74n3xz.ecal.di.IoDispatcher
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 
 @HiltViewModel
 class EventEditViewModel @Inject constructor(
-    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     private val eventRepository: EventRepository,
     private val saveEventUseCase: SaveEventUseCase,
     private val deleteEventUseCase: DeleteEventUseCase
@@ -64,7 +61,7 @@ class EventEditViewModel @Inject constructor(
         ) {
             return
         }
-        viewModelScope.launch(ioDispatcher) {
+        viewModelScope.launch {
             var event: Event? = null
             val cause: Exception? = try {
                 event = eventRepository.getEventByUid(eventUid)
@@ -118,7 +115,7 @@ class EventEditViewModel @Inject constructor(
         ) {
             return
         }
-        viewModelScope.launch(ioDispatcher) {
+        viewModelScope.launch {
             val operationState = try {
                 saveEventUseCase(event)
                 EditOperationState.Success
@@ -147,7 +144,7 @@ class EventEditViewModel @Inject constructor(
         ) {
             return
         }
-        viewModelScope.launch(ioDispatcher) {
+        viewModelScope.launch {
             val operationState = try {
                 deleteEventUseCase(event.uid)
                 EditOperationState.Success

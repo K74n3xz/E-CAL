@@ -15,10 +15,13 @@ import dagger.hilt.android.testing.UninstallModules
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import net.k74n3xz.ecal.di.ECALModule
+import net.k74n3xz.ecal.ECALModule
 import net.k74n3xz.ecal.HiltTestActivity
 import net.k74n3xz.ecal.R
 import net.k74n3xz.ecal.application.port.AlarmOccurrenceReconciler
+import net.k74n3xz.ecal.application.port.AlarmScheduler
+import net.k74n3xz.ecal.application.port.NotificationPublisher
+import net.k74n3xz.ecal.domain.model.Alarm
 import net.k74n3xz.ecal.domain.model.AlarmOccurrence
 import net.k74n3xz.ecal.domain.model.Event
 import net.k74n3xz.ecal.domain.repository.AlarmRepository
@@ -48,6 +51,14 @@ class EventEditFlowTest {
     @BindValue
     @JvmField
     val reconciler: AlarmOccurrenceReconciler = CountingReconciler()
+
+    @BindValue
+    @JvmField
+    val alarmScheduler: AlarmScheduler = NoOpAlarmScheduler()
+
+    @BindValue
+    @JvmField
+    val notificationPublisher: NotificationPublisher = NoOpNotificationPublisher()
 
     @get:Rule(order = 0)
     val hiltRule = HiltAndroidRule(this)
@@ -267,7 +278,7 @@ private class ControllableEventRepository : EventRepository {
         return events.value.firstOrNull { it.uid == uid }
     }
 
-    override suspend fun observeEventsOverlappingRange(
+    override fun observeEventsOverlappingRange(
         rangeStart: ZonedDateTime,
         rangeEnd: ZonedDateTime
     ): Flow<List<Event>> = events
@@ -291,18 +302,30 @@ private class ControllableEventRepository : EventRepository {
 
 private class CountingReconciler : AlarmOccurrenceReconciler {
     var calls = 0
-    override fun reconcileAlarmOccurrences() {
+    override fun request() {
         calls++
     }
 }
 
+private class NoOpAlarmScheduler : AlarmScheduler {
+    override fun schedule(id: Long, triggerAt: Instant) = Unit
+    override fun cancel(id: Long) = Unit
+}
+
+private class NoOpNotificationPublisher : NotificationPublisher {
+    override fun publish(id: Long, description: String) = Unit
+}
+
 private class NoOpAlarmRepository : AlarmRepository {
-    override suspend fun getAlarmDescriptionByAlarmOccurrenceId(alarmOccurrenceId: Long) = null
+    override suspend fun getDueAlarmOccurrenceIdsAndActions(triggerAt: Instant) =
+        emptyList<Pair<LongArray, Alarm.Action>>()
+
     override suspend fun getAlarmOccurrenceNeedingReconciliation(): Pair<List<AlarmOccurrence>, List<AlarmOccurrence>> =
         emptyList<AlarmOccurrence>() to emptyList()
 
     override suspend fun markAlarmOccurrenceAsCancelled(alarmOccurrenceId: Long) = Unit
     override suspend fun markAlarmOccurrenceAsScheduled(alarmOccurrenceId: Long) = Unit
+    override suspend fun markAlarmOccurrenceAsUnknown(alarmOccurrenceId: Long) = Unit
     override suspend fun markAllAlarmOccurrencesAsCancelled() = Unit
-    override suspend fun handleAlarmOccurrenceRinging(alarmOccurrenceId: Long) = Unit
+    override suspend fun processDueAlarmOccurrence(alarmOccurrenceId: Long) = Unit
 }

@@ -12,6 +12,6 @@ class DeleteEventUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(eventUid: String) {
         eventRepository.deleteEventByUid(eventUid)
-        reconciler.reconcileAlarmOccurrences()
+        reconciler.request()
     }
 }

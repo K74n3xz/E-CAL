@@ -45,8 +45,7 @@ class EventEditViewModelTest {
         viewModel = EventEditViewModel(
             eventRepository = repository,
             saveEventUseCase = SaveEventUseCase(repository, reconciler),
-            deleteEventUseCase = DeleteEventUseCase(repository, reconciler),
-            ioDispatcher = mainDispatcherRule.dispatcher
+            deleteEventUseCase = DeleteEventUseCase(repository, reconciler)
         )
     }
 
@@ -445,7 +444,7 @@ private class FakeEventRepository : EventRepository {
         return eventToLoad
     }
 
-    override suspend fun observeEventsOverlappingRange(
+    override fun observeEventsOverlappingRange(
         rangeStart: ZonedDateTime,
         rangeEnd: ZonedDateTime
     ): Flow<List<Event>> = emptyFlow()
@@ -467,7 +466,7 @@ private class FakeReconciler : AlarmOccurrenceReconciler {
     var calls = 0
     var failure: Exception? = null
 
-    override fun reconcileAlarmOccurrences() {
+    override fun request() {
         calls++
         failure?.let { throw it }
     }

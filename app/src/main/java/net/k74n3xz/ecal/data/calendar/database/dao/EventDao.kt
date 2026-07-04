@@ -11,7 +11,7 @@ import java.time.Instant
 interface EventDao {
     @Transaction
     @Query("SELECT * FROM event_component WHERE uid = :eventComponentUid")
-    fun queryEventComponentWithAlarmComponentsByEventComponentUid(eventComponentUid: String): EventComponentWithAlarmComponents?
+    suspend fun queryEventComponentWithAlarmComponentsByEventComponentUid(eventComponentUid: String): EventComponentWithAlarmComponents?
 
     @Transaction
     @Query("SELECT * FROM event_component WHERE (endAt ISNULL AND startAt BETWEEN :left AND :right) OR NOT (startAt > :right OR endAt < :left)")

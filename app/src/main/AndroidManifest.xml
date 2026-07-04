@@ -19,6 +19,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.ECAL">
+
         <activity
             android:name=".android.components.activity.MainActivity"
             android:exported="true"
@@ -45,6 +46,18 @@
             android:name=".android.components.service.AlarmReconciliationService"
             android:exported="false"
             android:foregroundServiceType="shortService" />
+
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
+
     </application>
 
 </manifest>
