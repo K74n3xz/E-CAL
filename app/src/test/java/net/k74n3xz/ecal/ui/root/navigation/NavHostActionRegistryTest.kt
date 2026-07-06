@@ -2,9 +2,9 @@ package net.k74n3xz.ecal.ui.root.navigation
 
 import net.k74n3xz.ecal.ui.module.eventedit.navigation.EventEdit
 import net.k74n3xz.ecal.ui.module.monthcalendar.navigation.MonthCalendar
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
-import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class NavHostActionRegistryTest {

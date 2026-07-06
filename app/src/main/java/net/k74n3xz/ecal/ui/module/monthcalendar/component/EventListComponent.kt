@@ -16,18 +16,18 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import net.k74n3xz.ecal.R
-import net.k74n3xz.ecal.domain.model.enumeration.event.EventStatus
-import net.k74n3xz.ecal.domain.model.Event
-import net.k74n3xz.ecal.data.calendar.utils.formatTimeRange
-import net.k74n3xz.ecal.data.calendar.utils.generateEventUid
+import net.k74n3xz.ecal.core.model.Event
+import net.k74n3xz.ecal.core.model.enumeration.event.EventStatus
 import net.k74n3xz.ecal.ui.compositionlocal.LocalTimeZone
+import net.k74n3xz.ecal.utils.formatTimeRange
+import net.k74n3xz.ecal.utils.generateEventUid
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.FormatStyle
@@ -69,7 +69,8 @@ private fun EventCard(event: Event, onEdit: (Event) -> Unit, modifier: Modifier 
                 } else {
                     MaterialTheme.colorScheme.onSurface.copy(0.4f)
                 }
-                val description = event.description ?: stringResource(R.string.text_no_description_hint)
+                val description =
+                    event.description ?: stringResource(R.string.text_no_description_hint)
                 val descriptionColor = if (event.summary != null) {
                     MaterialTheme.colorScheme.onSurface
                 } else {
@@ -93,7 +94,7 @@ private fun EventCard(event: Event, onEdit: (Event) -> Unit, modifier: Modifier 
 
                 if (!location.isNullOrBlank()) {
                     Text(
-                        text = event.location,
+                        text = event.location!!,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                         textAlign = TextAlign.Start,
                         style = MaterialTheme.typography.labelSmall
@@ -161,7 +162,7 @@ private fun EventCardPreview2() {
     val timeZone = ZoneId.systemDefault()
 
     CompositionLocalProvider(LocalTimeZone provides timeZone) {
-        EventCard(Event(), {})
+        EventCard(Event(generateEventUid()), {})
     }
 }
 

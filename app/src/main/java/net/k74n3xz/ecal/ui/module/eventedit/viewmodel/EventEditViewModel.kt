@@ -8,10 +8,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import net.k74n3xz.ecal.application.usecase.DeleteEventUseCase
-import net.k74n3xz.ecal.application.usecase.SaveEventUseCase
-import net.k74n3xz.ecal.domain.model.Event
-import net.k74n3xz.ecal.domain.repository.EventRepository
+import net.k74n3xz.ecal.core.application.repository.EventRepository
+import net.k74n3xz.ecal.core.application.usecase.DeleteEventUseCase
+import net.k74n3xz.ecal.core.application.usecase.SaveEventUseCase
+import net.k74n3xz.ecal.core.model.Event
 import net.k74n3xz.ecal.ui.module.eventedit.viewmodel.state.EditMode
 import net.k74n3xz.ecal.ui.module.eventedit.viewmodel.state.EditOperationState
 import javax.inject.Inject

@@ -50,6 +50,10 @@ kotlin {
 }
 
 dependencies {
+    implementation(project(":core:model"))
+    implementation(project(":core:database"))
+    implementation(project(":core:preference"))
+    implementation(project(":core:application"))
     compileOnly(libs.error.prone.annotations)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -67,14 +71,11 @@ dependencies {
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)
     implementation(libs.kotlinx.serialization.core)
-    ksp(libs.androidx.room.compiler)
-    implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.work.runtime)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt)
     implementation(libs.hilt.navigation.compose)
     implementation(libs.hilt.work)
-    implementation(libs.ical4j)
     implementation(libs.kizitonwose.calendar)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)

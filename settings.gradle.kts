@@ -24,4 +24,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "E•CAL"
 include(":app")
- 
+include(":core:model")
+include(":core:database")
+include(":core:preference")
+include(":core:application")

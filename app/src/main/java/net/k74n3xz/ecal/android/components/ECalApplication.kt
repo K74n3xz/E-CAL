@@ -5,7 +5,7 @@ import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import dagger.hilt.android.HiltAndroidApp
 import net.k74n3xz.ecal.android.work.scheduler.DueAlarmHandlingScheduler
-import net.k74n3xz.ecal.application.port.AlarmOccurrenceReconciler
+import net.k74n3xz.ecal.core.application.port.AlarmOccurrenceReconciler
 import javax.inject.Inject
 
 @HiltAndroidApp

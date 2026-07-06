@@ -15,9 +15,9 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
-import net.k74n3xz.ecal.data.settings.repository.AppSettingsRepository
-import net.k74n3xz.ecal.domain.model.Event
-import net.k74n3xz.ecal.domain.repository.EventRepository
+import net.k74n3xz.ecal.core.application.repository.EventRepository
+import net.k74n3xz.ecal.core.model.Event
+import net.k74n3xz.ecal.core.preference.api.PreferenceRepository
 import net.k74n3xz.ecal.utils.atEndOfDay
 import java.time.LocalDate
 import java.time.ZoneId
@@ -26,11 +26,10 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MonthCalenderViewModel @Inject constructor(
-    private val appSettingsRepository: AppSettingsRepository,
+    private val preferenceRepository: PreferenceRepository,
     private val eventRepository: EventRepository
 ) : ViewModel() {
-    // NOTE Repository supply Flow only, default comes from StateFlow of ViewModel.
-    private val timeZone: Flow<ZoneId> = appSettingsRepository.timeZone
+    private val timeZone: Flow<ZoneId> = preferenceRepository.timeZone
 
     private val _selectedDate = MutableStateFlow(LocalDate.now())
     val selectedDate: StateFlow<LocalDate> = _selectedDate.asStateFlow()

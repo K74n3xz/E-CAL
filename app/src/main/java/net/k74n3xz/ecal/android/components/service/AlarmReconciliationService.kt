@@ -13,7 +13,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import net.k74n3xz.ecal.R
 import net.k74n3xz.ecal.android.helper.notification.ForegroundServiceNotificationHelper
-import net.k74n3xz.ecal.application.usecase.ReconcileAlarmOccurrencesUseCase
+import net.k74n3xz.ecal.core.application.usecase.ReconcileAlarmOccurrencesUseCase
 import javax.inject.Inject
 import net.k74n3xz.ecal.android.constant.Notification as NotificationConstant
 

@@ -8,7 +8,7 @@ import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
 import net.k74n3xz.ecal.R
 import net.k74n3xz.ecal.android.helper.notification.ReminderNotificationHelper
-import net.k74n3xz.ecal.application.port.NotificationPublisher
+import net.k74n3xz.ecal.core.application.port.NotificationPublisher
 import javax.inject.Inject
 import javax.inject.Singleton
 import net.k74n3xz.ecal.android.constant.Notification as NotificationConstant

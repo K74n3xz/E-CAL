@@ -6,7 +6,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import net.k74n3xz.ecal.application.usecase.ReconcileAlarmOccurrencesUseCase
+import net.k74n3xz.ecal.core.application.usecase.ReconcileAlarmOccurrencesUseCase
 import java.util.concurrent.CancellationException
 
 @HiltWorker

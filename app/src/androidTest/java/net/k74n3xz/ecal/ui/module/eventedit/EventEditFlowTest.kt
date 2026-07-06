@@ -2,9 +2,9 @@ package net.k74n3xz.ecal.ui.module.eventedit
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.platform.app.InstrumentationRegistry
@@ -18,25 +18,30 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import net.k74n3xz.ecal.ECALModule
 import net.k74n3xz.ecal.HiltTestActivity
 import net.k74n3xz.ecal.R
-import net.k74n3xz.ecal.application.port.AlarmOccurrenceReconciler
-import net.k74n3xz.ecal.application.port.AlarmScheduler
-import net.k74n3xz.ecal.application.port.NotificationPublisher
-import net.k74n3xz.ecal.domain.model.Alarm
-import net.k74n3xz.ecal.domain.model.AlarmOccurrence
-import net.k74n3xz.ecal.domain.model.Event
-import net.k74n3xz.ecal.domain.repository.AlarmRepository
-import net.k74n3xz.ecal.domain.repository.EventRepository
+import net.k74n3xz.ecal.core.application.port.AlarmOccurrenceReconciler
+import net.k74n3xz.ecal.core.application.port.AlarmScheduler
+import net.k74n3xz.ecal.core.application.port.NotificationPublisher
+import net.k74n3xz.ecal.core.application.repository.AlarmRepository
+import net.k74n3xz.ecal.core.application.repository.EventRepository
+import net.k74n3xz.ecal.core.application.usecase.DeleteEventUseCase
+import net.k74n3xz.ecal.core.application.usecase.HandleDueAlarmsUseCase
+import net.k74n3xz.ecal.core.application.usecase.ReconcileAlarmOccurrencesUseCase
+import net.k74n3xz.ecal.core.application.usecase.SaveEventUseCase
+import net.k74n3xz.ecal.core.database.DatabaseModule
+import net.k74n3xz.ecal.core.model.Alarm
+import net.k74n3xz.ecal.core.model.AlarmOccurrence
+import net.k74n3xz.ecal.core.model.Event
 import net.k74n3xz.ecal.ui.root.AppRoot
-import org.junit.Before
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import java.time.ZonedDateTime
 import java.time.Instant
+import java.time.ZonedDateTime
 import java.util.concurrent.CopyOnWriteArrayList
 
 @HiltAndroidTest
-@UninstallModules(ECALModule::class)
+@UninstallModules(ECALModule::class, DatabaseModule::class)
 class EventEditFlowTest {
     @BindValue
     @JvmField
@@ -59,6 +64,24 @@ class EventEditFlowTest {
     @BindValue
     @JvmField
     val notificationPublisher: NotificationPublisher = NoOpNotificationPublisher()
+
+    @BindValue
+    @JvmField
+    val saveEventUseCase = SaveEventUseCase(eventRepository, reconciler)
+
+    @BindValue
+    @JvmField
+    val deleteEventUseCase = DeleteEventUseCase(eventRepository, reconciler)
+
+    @BindValue
+    @JvmField
+    val handleDueAlarmsUseCase =
+        HandleDueAlarmsUseCase(alarmRepository, reconciler, notificationPublisher)
+
+    @BindValue
+    @JvmField
+    val reconcileAlarmOccurrencesUseCase =
+        ReconcileAlarmOccurrencesUseCase(alarmRepository, alarmScheduler)
 
     @get:Rule(order = 0)
     val hiltRule = HiltAndroidRule(this)

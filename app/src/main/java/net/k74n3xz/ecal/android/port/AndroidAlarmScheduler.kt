@@ -1,7 +1,7 @@
 package net.k74n3xz.ecal.android.port
 
 import net.k74n3xz.ecal.android.helper.alarm.AlarmHelper
-import net.k74n3xz.ecal.application.port.AlarmScheduler
+import net.k74n3xz.ecal.core.application.port.AlarmScheduler
 import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton

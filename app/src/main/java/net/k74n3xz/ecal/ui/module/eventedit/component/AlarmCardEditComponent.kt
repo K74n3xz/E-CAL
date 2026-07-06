@@ -45,8 +45,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.text.isDigitsOnly
 import net.k74n3xz.ecal.R
-import net.k74n3xz.ecal.domain.model.enumeration.alarm.TriggerRelationship
-import net.k74n3xz.ecal.domain.model.Alarm
+import net.k74n3xz.ecal.core.model.Alarm
+import net.k74n3xz.ecal.core.model.enumeration.alarm.TriggerRelationship
 import net.k74n3xz.ecal.ui.compositionlocal.LocalTimeZone
 import java.time.Duration
 import java.time.LocalDateTime
@@ -73,7 +73,7 @@ fun AlarmCardEditComponent(
     // Action
 
     // Action - Display: Description
-    val descriptionFieldState = rememberTextFieldState(initialText = alarm.action.description)
+    val descriptionFieldState = rememberTextFieldState(initialText = (alarm.action as Alarm.Action.Display).description)
 
     // Trigger
 
@@ -91,7 +91,7 @@ fun AlarmCardEditComponent(
     var relativeTo by rememberSaveable {
         mutableStateOf(
             when (alarm.trigger) {
-                is Alarm.Trigger.RelativeTrigger -> alarm.trigger.relativeTo
+                is Alarm.Trigger.RelativeTrigger -> (alarm.trigger as Alarm.Trigger.RelativeTrigger).relativeTo
                 is Alarm.Trigger.AbsoluteTrigger -> TriggerRelationship.START
             }
         )
@@ -101,7 +101,7 @@ fun AlarmCardEditComponent(
     // TODO: Let users enter relative offsets in units other than minutes.
     val offsetFieldState = rememberTextFieldState(
         initialText = when (alarm.trigger) {
-            is Alarm.Trigger.RelativeTrigger -> (-alarm.trigger.offset.toMinutes()).toString()
+            is Alarm.Trigger.RelativeTrigger -> (-(alarm.trigger as Alarm.Trigger.RelativeTrigger).offset.toMinutes()).toString()
             is Alarm.Trigger.AbsoluteTrigger -> 15.toString()
         }
     )
@@ -115,7 +115,7 @@ fun AlarmCardEditComponent(
                 is Alarm.Trigger.RelativeTrigger -> LocalDateTime.now().plusMinutes(15)
                     .toLocalDate()
 
-                is Alarm.Trigger.AbsoluteTrigger -> alarm.trigger.at.atZone(timeZone).toLocalDate()
+                is Alarm.Trigger.AbsoluteTrigger -> (alarm.trigger as Alarm.Trigger.AbsoluteTrigger).at.atZone(timeZone).toLocalDate()
             }
         )
     }
@@ -125,7 +125,7 @@ fun AlarmCardEditComponent(
                 is Alarm.Trigger.RelativeTrigger -> LocalDateTime.now().plusMinutes(15)
                     .toLocalTime()
 
-                is Alarm.Trigger.AbsoluteTrigger -> alarm.trigger.at.atZone(timeZone).toLocalTime()
+                is Alarm.Trigger.AbsoluteTrigger -> (alarm.trigger as Alarm.Trigger.AbsoluteTrigger).at.atZone(timeZone).toLocalTime()
             }
         )
     }

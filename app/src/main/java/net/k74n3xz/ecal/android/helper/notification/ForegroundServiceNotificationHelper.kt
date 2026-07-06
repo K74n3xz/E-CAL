@@ -9,9 +9,9 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
 import net.k74n3xz.ecal.R
-import net.k74n3xz.ecal.android.constant.Notification as NotificationConstant
 import javax.inject.Inject
 import javax.inject.Singleton
+import net.k74n3xz.ecal.android.constant.Notification as NotificationConstant
 
 @Singleton
 class ForegroundServiceNotificationHelper @Inject constructor(@param:ApplicationContext private val context: Context) {

@@ -12,8 +12,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import net.k74n3xz.ecal.domain.model.Event
+import net.k74n3xz.ecal.core.model.Event
 import net.k74n3xz.ecal.ui.compositionlocal.LocalTimeZone
+import net.k74n3xz.ecal.utils.generateEventUid
 import java.time.ZoneId
 
 @Composable
@@ -56,7 +57,7 @@ fun ColorOverlayPreview() {
                 contentOnOverlay = { CircularProgressIndicator() }
             ) {
                 EventEditScreen(
-                    event = Event(),
+                    event = Event(generateEventUid()),
                     onCancel = {},
                     onSave = {}
                 )

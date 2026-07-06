@@ -26,7 +26,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import net.k74n3xz.ecal.R
-import net.k74n3xz.ecal.domain.model.Event
+import net.k74n3xz.ecal.core.model.Event
 import net.k74n3xz.ecal.ui.module.eventedit.component.DeletionConfirmationDialog
 import net.k74n3xz.ecal.ui.module.eventedit.component.scaffold.EventEditScreenTopBarComponent
 import net.k74n3xz.ecal.ui.module.eventedit.screen.ColorOverlay
@@ -36,6 +36,7 @@ import net.k74n3xz.ecal.ui.module.eventedit.viewmodel.EventEditViewModel
 import net.k74n3xz.ecal.ui.module.eventedit.viewmodel.state.EditMode
 import net.k74n3xz.ecal.ui.module.eventedit.viewmodel.state.EditOperationState
 import net.k74n3xz.ecal.ui.root.navigation.NavHostAction
+import net.k74n3xz.ecal.utils.generateEventUid
 import java.time.Instant
 
 const val TAG: String = "EventEditEntry"
@@ -128,7 +129,7 @@ fun EntryProviderScope<NavKey>.registerEventEditEntry(
                         ColorOverlay(enabled = isBusy) {
                             EventEditScreen(
                                 event = when (state.editMode) {
-                                    is EditMode.AddEventMode -> Event()
+                                    is EditMode.AddEventMode -> Event(generateEventUid())
                                     is EditMode.EditEventMode -> state.editMode.event
                                 },
                                 onCancel = viewModel::requestBack,

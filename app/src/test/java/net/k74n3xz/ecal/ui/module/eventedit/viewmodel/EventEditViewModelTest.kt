@@ -6,11 +6,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import net.k74n3xz.ecal.application.port.AlarmOccurrenceReconciler
-import net.k74n3xz.ecal.application.usecase.DeleteEventUseCase
-import net.k74n3xz.ecal.application.usecase.SaveEventUseCase
-import net.k74n3xz.ecal.domain.model.Event
-import net.k74n3xz.ecal.domain.repository.EventRepository
+import net.k74n3xz.ecal.core.application.port.AlarmOccurrenceReconciler
+import net.k74n3xz.ecal.core.application.repository.EventRepository
+import net.k74n3xz.ecal.core.application.usecase.DeleteEventUseCase
+import net.k74n3xz.ecal.core.application.usecase.SaveEventUseCase
+import net.k74n3xz.ecal.core.model.Event
 import net.k74n3xz.ecal.testutils.MainDispatcherRule
 import net.k74n3xz.ecal.ui.module.eventedit.viewmodel.state.EditMode
 import net.k74n3xz.ecal.ui.module.eventedit.viewmodel.state.EditOperationState

@@ -18,12 +18,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import net.k74n3xz.ecal.R
-import net.k74n3xz.ecal.domain.model.enumeration.event.EventStatus
-import net.k74n3xz.ecal.domain.model.Event
-import net.k74n3xz.ecal.data.calendar.utils.generateEventUid
+import net.k74n3xz.ecal.core.model.Event
+import net.k74n3xz.ecal.core.model.enumeration.event.EventStatus
 import net.k74n3xz.ecal.ui.compositionlocal.LocalTimeZone
 import net.k74n3xz.ecal.ui.module.monthcalendar.component.EventListComponent
 import net.k74n3xz.ecal.ui.module.monthcalendar.component.MonthCalendarComponent
+import net.k74n3xz.ecal.utils.generateEventUid
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId

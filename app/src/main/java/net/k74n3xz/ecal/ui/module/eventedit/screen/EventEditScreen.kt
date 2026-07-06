@@ -41,12 +41,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import net.k74n3xz.ecal.R
-import net.k74n3xz.ecal.domain.model.enumeration.event.EventStatus
-import net.k74n3xz.ecal.domain.model.enumeration.event.TimeTransparency
-import net.k74n3xz.ecal.domain.model.enumeration.alarm.TriggerRelationship
-import net.k74n3xz.ecal.domain.model.Alarm
-import net.k74n3xz.ecal.domain.model.Event
-import net.k74n3xz.ecal.data.calendar.utils.generateEventUid
+import net.k74n3xz.ecal.core.model.Alarm
+import net.k74n3xz.ecal.core.model.Event
+import net.k74n3xz.ecal.core.model.enumeration.alarm.TriggerRelationship
+import net.k74n3xz.ecal.core.model.enumeration.event.EventStatus
+import net.k74n3xz.ecal.core.model.enumeration.event.TimeTransparency
 import net.k74n3xz.ecal.ui.compositionlocal.LocalTimeZone
 import net.k74n3xz.ecal.ui.module.eventedit.component.AlarmCardEditComponent
 import net.k74n3xz.ecal.ui.module.eventedit.component.ComboBoxComponent
@@ -54,6 +53,7 @@ import net.k74n3xz.ecal.ui.module.eventedit.component.DateFieldComponent
 import net.k74n3xz.ecal.ui.module.eventedit.component.EventTextFieldComponent
 import net.k74n3xz.ecal.ui.module.eventedit.component.TimeFieldComponent
 import net.k74n3xz.ecal.utils.atEndOfDay
+import net.k74n3xz.ecal.utils.generateEventUid
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
@@ -453,8 +453,7 @@ fun EventEditScreen(
                                     relativeTo = TriggerRelationship.START,
                                     offset = Duration.ofMinutes(-15)
                                 ),
-                                interval = null,
-                                repeat = null
+                                repetition = null
                             )
                         )
                     }
@@ -478,8 +477,7 @@ fun EventEditScreen(
                                 trigger = Alarm.Trigger.AbsoluteTrigger(
                                     at = ZonedDateTime.now(timeZone).plusMinutes(15).toInstant()
                                 ),
-                                interval = null,
-                                repeat = null
+                                repetition = null
                             )
                         )
                     }
@@ -574,7 +572,7 @@ private fun EventEditScreenPreview1() {
     CompositionLocalProvider(LocalTimeZone provides ZoneId.systemDefault()) {
         Surface(modifier = Modifier.fillMaxSize()) {
             EventEditScreen(
-                event = Event(),
+                event = Event(generateEventUid()),
                 onCancel = {},
                 onSave = {}
             )
