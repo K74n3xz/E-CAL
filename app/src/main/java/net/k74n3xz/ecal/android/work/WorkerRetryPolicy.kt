@@ -4,6 +4,8 @@ import androidx.work.ListenableWorker
 
 internal const val MAX_WORKER_RETRY: Int = 7
 
-internal fun retryOrFail(runAttemptCount: Int): ListenableWorker.Result =
-    if (runAttemptCount < MAX_WORKER_RETRY) ListenableWorker.Result.retry()
-    else ListenableWorker.Result.failure()
+internal fun retryOrFail(runAttemptCount: Int): ListenableWorker.Result = if (runAttemptCount < MAX_WORKER_RETRY) {
+    ListenableWorker.Result.retry()
+} else {
+    ListenableWorker.Result.failure()
+}

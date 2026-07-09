@@ -1,12 +1,12 @@
 package net.k74n3xz.ecal.utils
 
-import net.k74n3xz.ecal.core.model.Event
-import org.junit.Assert.assertEquals
-import org.junit.Test
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.FormatStyle
 import java.util.Locale
+import net.k74n3xz.ecal.core.model.Event
+import org.junit.Assert.assertEquals
+import org.junit.Test
 
 class ModelFormatterTest {
     private val zone = ZoneId.of("Asia/Hong_Kong")

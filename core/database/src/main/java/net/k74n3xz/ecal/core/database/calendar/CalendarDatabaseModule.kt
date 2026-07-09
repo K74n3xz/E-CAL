@@ -7,50 +7,38 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 import net.k74n3xz.ecal.core.database.calendar.dao.AlarmComponentDao
 import net.k74n3xz.ecal.core.database.calendar.dao.AlarmDao
 import net.k74n3xz.ecal.core.database.calendar.dao.AlarmInstanceDao
 import net.k74n3xz.ecal.core.database.calendar.dao.EventComponentDao
 import net.k74n3xz.ecal.core.database.calendar.dao.EventDao
-import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 internal object CalendarDatabaseModule {
     @Provides
     @Singleton
-    fun provideAppDatabase(@ApplicationContext context: Context): CalendarDatabase {
-        return Room
-            .databaseBuilder(
-                context = context.applicationContext,
-                klass = CalendarDatabase::class.java,
-                name = "calendar.db"
-            )
-            .build()
-    }
+    fun provideAppDatabase(@ApplicationContext context: Context): CalendarDatabase = Room
+        .databaseBuilder(
+            context = context.applicationContext,
+            klass = CalendarDatabase::class.java,
+            name = "calendar.db"
+        )
+        .build()
 
     @Provides
-    fun provideEventComponentDao(db: CalendarDatabase): EventComponentDao {
-        return db.eventComponentDao()
-    }
+    fun provideEventComponentDao(db: CalendarDatabase): EventComponentDao = db.eventComponentDao()
 
     @Provides
-    fun provideAlarmComponentDao(db: CalendarDatabase): AlarmComponentDao {
-        return db.alarmComponentDao()
-    }
+    fun provideAlarmComponentDao(db: CalendarDatabase): AlarmComponentDao = db.alarmComponentDao()
 
     @Provides
-    fun provideAlarmInstanceDao(db: CalendarDatabase): AlarmInstanceDao {
-        return db.alarmInstanceDao()
-    }
+    fun provideAlarmInstanceDao(db: CalendarDatabase): AlarmInstanceDao = db.alarmInstanceDao()
 
     @Provides
-    fun provideEventDao(db: CalendarDatabase): EventDao {
-        return db.eventDao()
-    }
+    fun provideEventDao(db: CalendarDatabase): EventDao = db.eventDao()
 
     @Provides
-    fun provideAlarmDao(db: CalendarDatabase): AlarmDao {
-        return db.alarmDao()
-    }
+    fun provideAlarmDao(db: CalendarDatabase): AlarmDao = db.alarmDao()
 }

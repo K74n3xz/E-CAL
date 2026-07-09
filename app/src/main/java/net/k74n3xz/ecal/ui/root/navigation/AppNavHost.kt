@@ -14,14 +14,14 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import net.k74n3xz.ecal.ui.module.eventedit.navigation.EventEdit
+import net.k74n3xz.ecal.ui.module.eventedit.navigation.EventEditNavKey
 import net.k74n3xz.ecal.ui.module.eventedit.navigation.registerEventEditEntry
-import net.k74n3xz.ecal.ui.module.monthcalendar.navigation.MonthCalendar
+import net.k74n3xz.ecal.ui.module.monthcalendar.navigation.MonthCalendarNavKey
 import net.k74n3xz.ecal.ui.module.monthcalendar.navigation.registerMonthCalendarEntry
 
 @Composable
 fun AppNavHost() {
-    val backStack = rememberNavBackStack(MonthCalendar)
+    val backStack = rememberNavBackStack(MonthCalendarNavKey)
     val navHostActionRegistry = remember { NavHostActionRegistry() }
     val registerNavHostAction: @Composable (NavKey, NavHostAction) -> Unit =
         { navKey, navHostAction ->
@@ -49,8 +49,8 @@ fun AppNavHost() {
         predictivePopTransitionSpec = { EnterTransition.None togetherWith slideOutHorizontally { it / 2 } },
         entryProvider = entryProvider {
             registerMonthCalendarEntry(
-                navigateToAddEvent = { backStack.add(EventEdit(null)) },
-                navigateToEditEvent = { backStack.add(EventEdit(it.uid)) }
+                navigateToAddEvent = { backStack.add(EventEditNavKey(null)) },
+                navigateToEditEvent = { backStack.add(EventEditNavKey(it.uid)) }
             )
             registerEventEditEntry(
                 registerNavHostAction = registerNavHostAction,

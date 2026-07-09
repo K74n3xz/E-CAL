@@ -1,5 +1,6 @@
 package net.k74n3xz.ecal.core.application.usecase
 
+import java.time.Instant
 import kotlinx.coroutines.test.runTest
 import net.k74n3xz.ecal.core.application.port.AlarmOccurrenceReconciler
 import net.k74n3xz.ecal.core.application.port.NotificationPublisher
@@ -9,7 +10,6 @@ import net.k74n3xz.ecal.core.model.AlarmOccurrence
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.time.Instant
 
 class HandleDueAlarmsUseCaseTest {
     private val now = Instant.parse("2026-07-04T00:00:00Z")
@@ -93,7 +93,8 @@ private class FakeReconciler : AlarmOccurrenceReconciler {
 
 private class FakeAlarmRepository(
     private val due: List<Pair<LongArray, Alarm.Action>> = emptyList(),
-    private val reconciliation: Pair<List<AlarmOccurrence>, List<AlarmOccurrence>> = emptyList<AlarmOccurrence>() to emptyList()
+    private val reconciliation: Pair<List<AlarmOccurrence>, List<AlarmOccurrence>> = emptyList<AlarmOccurrence>() to
+        emptyList()
 ) : AlarmRepository {
     val processedIds = mutableListOf<Long>()
     val transitions = mutableListOf<String>()

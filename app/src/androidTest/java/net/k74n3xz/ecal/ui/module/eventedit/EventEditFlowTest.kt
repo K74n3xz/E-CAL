@@ -12,6 +12,9 @@ import dagger.hilt.android.testing.BindValue
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.UninstallModules
+import java.time.Instant
+import java.time.ZonedDateTime
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,9 +39,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import java.time.Instant
-import java.time.ZonedDateTime
-import java.util.concurrent.CopyOnWriteArrayList
 
 @HiltAndroidTest
 @UninstallModules(ECALModule::class, DatabaseModule::class)
@@ -264,16 +264,12 @@ class EventEditFlowTest {
         composeRule.onNodeWithText(newEventTitle()).assertIsDisplayed()
     }
 
-    private fun resource(id: Int): String =
-        InstrumentationRegistry.getInstrumentation().targetContext.getString(id)
-
+    private fun resource(id: Int): String = InstrumentationRegistry.getInstrumentation().targetContext.getString(id)
     private fun addEventDescription() = resource(R.string.fab_content_description_add_new_event)
     private fun newEventTitle() = resource(R.string.topbar_title_text_new_event)
     private fun saveText() = resource(R.string.text_save)
     private fun operationFailedText() = resource(R.string.error_event_operation_failed)
-    private fun snackbarDismissDescription() =
-        resource(androidx.compose.material3.R.string.m3c_snackbar_dismiss)
-
+    private fun snackbarDismissDescription() = resource(androidx.compose.material3.R.string.m3c_snackbar_dismiss)
     private fun editEventTitle() = resource(R.string.topbar_title_text_edit_event)
     private fun editDescription() = resource(R.string.button_content_description_edit)
     private fun loadingText() = resource(R.string.text_loading)
@@ -301,10 +297,8 @@ private class ControllableEventRepository : EventRepository {
         return events.value.firstOrNull { it.uid == uid }
     }
 
-    override fun observeEventsOverlappingRange(
-        rangeStart: ZonedDateTime,
-        rangeEnd: ZonedDateTime
-    ): Flow<List<Event>> = events
+    override fun observeEventsOverlappingRange(rangeStart: ZonedDateTime, rangeEnd: ZonedDateTime): Flow<List<Event>> =
+        events
 
     override suspend fun saveEvent(event: Event) {
         saveStarted.complete(Unit)

@@ -8,9 +8,8 @@ internal fun calculateNextAlarmTrigger(
     interval: Duration,
     instancesCount: Long,
     repeat: Int
-): Instant? =
-    if (instancesCount - 1 < repeat) {
-        firstTriggerAt.plus(interval.multipliedBy(instancesCount))
-    } else {
-        null
-    }
+): Instant? = if (instancesCount - 1 < repeat) {
+    firstTriggerAt.plus(interval.multipliedBy(instancesCount))
+} else {
+    null
+}

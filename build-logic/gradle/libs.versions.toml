@@ -1,0 +1,9 @@
+[versions]
+agp = "9.2.1"
+kotlin = "2.4.0"
+ktlint = "14.2.0"
+
+[libraries]
+plugin-android-library = { group = "com.android.library", name = "com.android.library.gradle.plugin", version.ref = "agp" }
+plugin-jetbrains-kotlin-jvm = { group = "org.jetbrains.kotlin.jvm", name = "org.jetbrains.kotlin.jvm.gradle.plugin", version.ref = "kotlin" }
+plugin-ktlint = { group = "org.jlleitschuh.gradle.ktlint", name = "org.jlleitschuh.gradle.ktlint.gradle.plugin", version.ref = "ktlint" }

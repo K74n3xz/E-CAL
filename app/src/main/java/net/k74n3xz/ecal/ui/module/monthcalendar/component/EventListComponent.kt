@@ -22,22 +22,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.FormatStyle
 import net.k74n3xz.ecal.R
 import net.k74n3xz.ecal.core.model.Event
 import net.k74n3xz.ecal.core.model.enumeration.event.EventStatus
 import net.k74n3xz.ecal.ui.compositionlocal.LocalTimeZone
 import net.k74n3xz.ecal.utils.formatTimeRange
 import net.k74n3xz.ecal.utils.generateEventUid
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.FormatStyle
 
 @Composable
-fun EventListComponent(
-    eventList: List<Event>,
-    onEventEdit: (Event) -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun EventListComponent(eventList: List<Event>, onEventEdit: (Event) -> Unit, modifier: Modifier = Modifier) {
     LazyColumn(modifier = modifier) {
         items(
             items = eventList,

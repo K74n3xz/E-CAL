@@ -4,4 +4,4 @@ import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class EventEdit(val eventUid: String?) : NavKey
+data class EventEditNavKey(val eventUid: String?) : NavKey

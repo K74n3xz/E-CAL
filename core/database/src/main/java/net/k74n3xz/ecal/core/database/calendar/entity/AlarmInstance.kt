@@ -4,9 +4,9 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import java.time.Instant
 import net.k74n3xz.ecal.core.database.calendar.entity.enumeration.alarminstance.DesiredState
 import net.k74n3xz.ecal.core.database.calendar.entity.enumeration.alarminstance.ReconcileResult
-import java.time.Instant
 
 @Entity(
     tableName = "alarm_instance",

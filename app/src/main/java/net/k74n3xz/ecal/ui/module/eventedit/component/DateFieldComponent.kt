@@ -29,20 +29,16 @@ import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import net.k74n3xz.ecal.R
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+import net.k74n3xz.ecal.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DateFieldComponent(
-    date: LocalDate,
-    onPickDate: (LocalDate) -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun DateFieldComponent(date: LocalDate, onPickDate: (LocalDate) -> Unit, modifier: Modifier = Modifier) {
     val utcZoneId = ZoneId.of("UTC")
     val dateFormatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
 
@@ -58,7 +54,9 @@ fun DateFieldComponent(
             IconButton(onClick = { isShowingDialog = true }) {
                 Icon(
                     imageVector = Icons.Outlined.DateRange,
-                    contentDescription = stringResource(R.string.text_field_trailing_icon_content_description_select_date)
+                    contentDescription = stringResource(
+                        R.string.text_field_trailing_icon_content_description_select_date
+                    )
                 )
             }
         },

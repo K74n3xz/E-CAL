@@ -1,9 +1,9 @@
 package net.k74n3xz.ecal.utils
 
+import java.util.UUID
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.util.UUID
 
 class ComponentUidGeneratorTest {
     @Test

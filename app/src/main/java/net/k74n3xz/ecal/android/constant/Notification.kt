@@ -9,7 +9,7 @@ object Notification {
     object Tag {
         private const val REMINDER_NOTIFICATION_TAG_PREFIX: String = "reminder:"
 
-        fun REMINDER_NOTIFICATION_TAG(id: Long): String = "$REMINDER_NOTIFICATION_TAG_PREFIX$id"
+        fun getReminderNotificationTag(id: Long): String = "$REMINDER_NOTIFICATION_TAG_PREFIX$id"
     }
 
     object Id {

@@ -6,8 +6,8 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import net.k74n3xz.ecal.core.application.usecase.ReconcileAlarmOccurrencesUseCase
 import java.util.concurrent.CancellationException
+import net.k74n3xz.ecal.core.application.usecase.ReconcileAlarmOccurrencesUseCase
 
 @HiltWorker
 class AlarmReconciliationWorker @AssistedInject constructor(
@@ -15,13 +15,12 @@ class AlarmReconciliationWorker @AssistedInject constructor(
     @Assisted params: WorkerParameters,
     private val reconcileAlarmOccurrences: ReconcileAlarmOccurrencesUseCase
 ) : CoroutineWorker(appContext, params) {
-    override suspend fun doWork(): Result =
-        try {
-            reconcileAlarmOccurrences()
-            Result.success()
-        } catch (cancellationException: CancellationException) {
-            throw cancellationException
-        } catch (_: Exception) {
-            retryOrFail(runAttemptCount)
-        }
+    override suspend fun doWork(): Result = try {
+        reconcileAlarmOccurrences()
+        Result.success()
+    } catch (cancellationException: CancellationException) {
+        throw cancellationException
+    } catch (_: Exception) {
+        retryOrFail(runAttemptCount)
+    }
 }

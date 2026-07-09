@@ -44,14 +44,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.text.isDigitsOnly
-import net.k74n3xz.ecal.R
-import net.k74n3xz.ecal.core.model.Alarm
-import net.k74n3xz.ecal.core.model.enumeration.alarm.TriggerRelationship
-import net.k74n3xz.ecal.ui.compositionlocal.LocalTimeZone
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import net.k74n3xz.ecal.R
+import net.k74n3xz.ecal.core.model.Alarm
+import net.k74n3xz.ecal.core.model.enumeration.alarm.TriggerRelationship
+import net.k74n3xz.ecal.ui.compositionlocal.LocalTimeZone
 
 private enum class TriggerType { RELATIVE, ABSOLUTE }
 
@@ -101,7 +101,9 @@ fun AlarmCardEditComponent(
     // TODO: Let users enter relative offsets in units other than minutes.
     val offsetFieldState = rememberTextFieldState(
         initialText = when (alarm.trigger) {
-            is Alarm.Trigger.RelativeTrigger -> (-(alarm.trigger as Alarm.Trigger.RelativeTrigger).offset.toMinutes()).toString()
+            is Alarm.Trigger.RelativeTrigger -> (-(alarm.trigger as Alarm.Trigger.RelativeTrigger).offset.toMinutes())
+                .toString()
+
             is Alarm.Trigger.AbsoluteTrigger -> 15.toString()
         }
     )
@@ -115,7 +117,8 @@ fun AlarmCardEditComponent(
                 is Alarm.Trigger.RelativeTrigger -> LocalDateTime.now().plusMinutes(15)
                     .toLocalDate()
 
-                is Alarm.Trigger.AbsoluteTrigger -> (alarm.trigger as Alarm.Trigger.AbsoluteTrigger).at.atZone(timeZone).toLocalDate()
+                is Alarm.Trigger.AbsoluteTrigger -> (alarm.trigger as Alarm.Trigger.AbsoluteTrigger).at.atZone(timeZone)
+                    .toLocalDate()
             }
         )
     }
@@ -125,7 +128,8 @@ fun AlarmCardEditComponent(
                 is Alarm.Trigger.RelativeTrigger -> LocalDateTime.now().plusMinutes(15)
                     .toLocalTime()
 
-                is Alarm.Trigger.AbsoluteTrigger -> (alarm.trigger as Alarm.Trigger.AbsoluteTrigger).at.atZone(timeZone).toLocalTime()
+                is Alarm.Trigger.AbsoluteTrigger -> (alarm.trigger as Alarm.Trigger.AbsoluteTrigger).at.atZone(timeZone)
+                    .toLocalTime()
             }
         )
     }

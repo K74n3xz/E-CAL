@@ -5,6 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.kizitonwose.calendar.core.atStartOfMonth
 import com.kizitonwose.calendar.core.yearMonth
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,10 +23,6 @@ import net.k74n3xz.ecal.core.application.repository.EventRepository
 import net.k74n3xz.ecal.core.model.Event
 import net.k74n3xz.ecal.core.preference.api.PreferenceRepository
 import net.k74n3xz.ecal.utils.atEndOfDay
-import java.time.LocalDate
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import javax.inject.Inject
 
 @HiltViewModel
 class MonthCalenderViewModel @Inject constructor(

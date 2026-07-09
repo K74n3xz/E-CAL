@@ -3,6 +3,8 @@ package net.k74n3xz.ecal.core.database
 import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
+import java.time.Duration
+import java.time.Instant
 import kotlinx.coroutines.test.runTest
 import net.k74n3xz.ecal.core.database.calendar.CalendarDatabase
 import net.k74n3xz.ecal.core.database.calendar.entity.AlarmComponent
@@ -19,8 +21,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import java.time.Duration
-import java.time.Instant
 
 class DatabaseAlarmRepositoryTest {
     private lateinit var database: CalendarDatabase
@@ -145,11 +145,7 @@ class DatabaseAlarmRepositoryTest {
         )
         .single()
 
-    private suspend fun insertInstance(
-        alarmId: Long,
-        triggerAt: Instant,
-        desiredState: DesiredState
-    ) {
+    private suspend fun insertInstance(alarmId: Long, triggerAt: Instant, desiredState: DesiredState) {
         database.alarmInstanceDao()
             .insert(
                 AlarmInstance(

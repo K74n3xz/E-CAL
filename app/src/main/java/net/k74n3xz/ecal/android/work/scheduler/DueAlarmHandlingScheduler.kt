@@ -8,10 +8,10 @@ import androidx.work.PeriodicWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import dagger.hilt.android.qualifiers.ApplicationContext
-import net.k74n3xz.ecal.android.work.DueAlarmHandlingWorker
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
+import net.k74n3xz.ecal.android.work.DueAlarmHandlingWorker
 
 @Singleton
 class DueAlarmHandlingScheduler @Inject constructor(@param:ApplicationContext private val context: Context) {

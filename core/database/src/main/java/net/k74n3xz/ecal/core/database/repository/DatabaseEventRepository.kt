@@ -2,6 +2,9 @@ package net.k74n3xz.ecal.core.database.repository
 
 import android.util.Log
 import androidx.room.withTransaction
+import java.time.ZonedDateTime
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.mapLatest
@@ -22,9 +25,6 @@ import net.k74n3xz.ecal.core.model.Alarm
 import net.k74n3xz.ecal.core.model.Event
 import net.k74n3xz.ecal.core.model.enumeration.alarm.TriggerRelationship
 import net.k74n3xz.ecal.core.model.enumeration.alarm.TriggerType
-import java.time.ZonedDateTime
-import javax.inject.Inject
-import javax.inject.Singleton
 
 @Singleton
 internal class DatabaseEventRepository @Inject constructor(
@@ -38,18 +38,18 @@ internal class DatabaseEventRepository @Inject constructor(
         private const val TAG: String = "RoomEventRepository"
     }
 
-    override suspend fun getEventByUid(uid: String): Event? =
-        eventDao
-            .queryEventComponentWithAlarmComponentsByEventComponentUid(uid)
-            ?.let { (eventComponent, alarmComponents) ->
-                eventComponent.toEvent(alarmComponents.map { alarmComponent -> alarmComponent.toAlarm() })
-            }
+    override suspend fun getEventByUid(uid: String): Event? = eventDao
+        .queryEventComponentWithAlarmComponentsByEventComponentUid(uid)
+        ?.let { (eventComponent, alarmComponents) ->
+            eventComponent.toEvent(
+                alarmComponents.map { alarmComponent ->
+                    alarmComponent.toAlarm()
+                }
+            )
+        }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun observeEventsOverlappingRange(
-        rangeStart: ZonedDateTime,
-        rangeEnd: ZonedDateTime
-    ): Flow<List<Event>> =
+    override fun observeEventsOverlappingRange(rangeStart: ZonedDateTime, rangeEnd: ZonedDateTime): Flow<List<Event>> =
         eventDao
             .observeEventComponentWithAlarmComponentsOverlappingInCloseRange(
                 rangeStart.toInstant(),
@@ -57,13 +57,19 @@ internal class DatabaseEventRepository @Inject constructor(
             )
             .mapLatest {
                 it.map { (eventComponent, alarmComponents) ->
-                    eventComponent.toEvent(alarmComponents.map { alarmComponent -> alarmComponent.toAlarm() })
+                    eventComponent.toEvent(
+                        alarmComponents.map { alarmComponent ->
+                            alarmComponent.toAlarm()
+                        }
+                    )
                 }
             }
 
     override suspend fun saveEvent(event: Event) {
         calendarDatabase.withTransaction {
-            eventComponentDao.upsert(event.toEventComponent(eventComponentDao.queryRawIcsByUid(event.uid)))
+            eventComponentDao.upsert(
+                event.toEventComponent(eventComponentDao.queryRawIcsByUid(event.uid))
+            )
             applyAlarmsForReferenceUnsafely(event.uid, event.alarms)
         }
     }

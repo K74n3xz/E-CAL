@@ -9,10 +9,10 @@ import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import androidx.core.app.NotificationCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
-import net.k74n3xz.ecal.R
-import net.k74n3xz.ecal.android.constant.Notification
 import javax.inject.Inject
 import javax.inject.Singleton
+import net.k74n3xz.ecal.R
+import net.k74n3xz.ecal.android.constant.Notification
 
 @Singleton
 class ReminderNotificationHelper @Inject constructor(@param:ApplicationContext private val context: Context) {
@@ -23,9 +23,12 @@ class ReminderNotificationHelper @Inject constructor(@param:ApplicationContext p
     @RequiresApi(Build.VERSION_CODES.O)
     private fun ensureChannel() {
         val channel = NotificationChannel(
-            /* id = */ Notification.Channel.REMINDER_CHANNEL_ID,
-            /* name = */ context.getString(R.string.notification_channel_name_reminders),
-            /* importance = */ NotificationManager.IMPORTANCE_HIGH
+            /* id = */
+            Notification.Channel.REMINDER_CHANNEL_ID,
+            /* name = */
+            context.getString(R.string.notification_channel_name_reminders),
+            /* importance = */
+            NotificationManager.IMPORTANCE_HIGH
         ).apply {
             description = context.getString(R.string.notification_channel_description_reminders)
             lockscreenVisibility = android.app.Notification.VISIBILITY_SECRET
@@ -41,8 +44,10 @@ class ReminderNotificationHelper @Inject constructor(@param:ApplicationContext p
         }
 
         val builder = NotificationCompat.Builder(
-            /* context = */ context.applicationContext,
-            /* channelId = */ Notification.Channel.REMINDER_CHANNEL_ID
+            /* context = */
+            context.applicationContext,
+            /* channelId = */
+            Notification.Channel.REMINDER_CHANNEL_ID
         ).apply {
             setSmallIcon(R.mipmap.ic_launcher_round)
             setContentTitle(title)

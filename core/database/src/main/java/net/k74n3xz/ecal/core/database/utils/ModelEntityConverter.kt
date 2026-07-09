@@ -1,5 +1,8 @@
 package net.k74n3xz.ecal.core.database.utils
 
+import java.io.StringReader
+import java.time.Duration
+import java.time.Instant
 import net.fortuna.ical4j.data.CalendarBuilder
 import net.fortuna.ical4j.model.Calendar
 import net.fortuna.ical4j.model.ParameterList
@@ -32,9 +35,6 @@ import net.k74n3xz.ecal.core.model.Event
 import net.k74n3xz.ecal.core.model.enumeration.alarm.Action
 import net.k74n3xz.ecal.core.model.enumeration.alarm.TriggerRelationship
 import net.k74n3xz.ecal.core.model.enumeration.alarm.TriggerType
-import java.io.StringReader
-import java.time.Duration
-import java.time.Instant
 
 // TODO: Replace this prototype PRODID with the final stable product identifier before release.
 private const val PROD_ID: String = "-//K74n3xz//E·CAL prototype//ZH-CN"
@@ -72,11 +72,15 @@ internal fun Event.toEventComponent(originalIcs: String? = null): EventComponent
                             Description(description),
                             Location(location),
                             DtStart(
-                                ParameterList(listOf(if (isAllDayEvent) Value.DATE else Value.DATE_TIME)),
+                                ParameterList(
+                                    listOf(if (isAllDayEvent) Value.DATE else Value.DATE_TIME)
+                                ),
                                 startAt
                             ),
                             DtEnd(
-                                ParameterList(listOf(if (isAllDayEvent) Value.DATE else Value.DATE_TIME)),
+                                ParameterList(
+                                    listOf(if (isAllDayEvent) Value.DATE else Value.DATE_TIME)
+                                ),
                                 endAt
                             ),
                             priority?.let { Priority(it) },
@@ -176,7 +180,9 @@ internal fun AlarmComponent.toAlarm(): Alarm = Alarm(
     when (action) {
         Action.DISPLAY -> Alarm.Action.Display(
             description
-                ?: throw IllegalArgumentException("When the action is \"DISPLAY\", the alarm MUST also include a \"DESCRIPTION\" property. (May the instance of AlarmComponent be broken?)")
+                ?: throw IllegalArgumentException(
+                    "When the action is \"DISPLAY\", the alarm MUST also include a \"DESCRIPTION\" property. (May the instance of AlarmComponent be broken?)"
+                )
         )
 
         else -> TODO()
@@ -184,25 +190,34 @@ internal fun AlarmComponent.toAlarm(): Alarm = Alarm(
     when (triggerType) {
         TriggerType.RELATIVE -> Alarm.Trigger.RelativeTrigger(
             triggerRelativeTo
-                ?: throw IllegalArgumentException("Neither `triggerRelativeTo` nor `triggerOffset` can be null for a relative alarm. (May the instance of AlarmComponent be broken?)"),
+                ?: throw IllegalArgumentException(
+                    "Neither `triggerRelativeTo` nor `triggerOffset` can be null for a relative alarm. (May the instance of AlarmComponent be broken?)"
+                ),
             triggerOffset
-                ?: throw IllegalArgumentException("Neither `triggerRelativeTo` nor `triggerOffset` can be null for a relative alarm. (May the instance of AlarmComponent be broken?)")
+                ?: throw IllegalArgumentException(
+                    "Neither `triggerRelativeTo` nor `triggerOffset` can be null for a relative alarm. (May the instance of AlarmComponent be broken?)"
+                )
         )
 
         TriggerType.ABSOLUTE -> Alarm.Trigger.AbsoluteTrigger(
             triggerAt
-                ?: throw IllegalArgumentException("`triggerAt` cannot be null for an absolute alarm. (May the instance of AlarmComponent be broken?)")
+                ?: throw IllegalArgumentException(
+                    "`triggerAt` cannot be null for an absolute alarm. (May the instance of AlarmComponent be broken?)"
+                )
         )
     },
-    if (interval == null && repeat == null) null
-    else if (interval != null && repeat != null) Alarm.Repetition(interval, repeat)
-    else throw IllegalArgumentException("\"`interval` and `repeat` must be assigned values simultaneously or neither must be assigned a value.\"")
+    if (interval == null && repeat == null) {
+        null
+    } else if (interval != null && repeat != null) {
+        Alarm.Repetition(interval, repeat)
+    } else {
+        throw IllegalArgumentException(
+            "\"`interval` and `repeat` must be assigned values simultaneously or neither must be assigned a value.\""
+        )
+    }
 )
 
-internal fun Alarm.toAlarmComponent(
-    referenceUid: String,
-    originalIcs: String? = null
-): AlarmComponent {
+internal fun Alarm.toAlarmComponent(referenceUid: String, originalIcs: String? = null): AlarmComponent {
     val actionType: Action
     val description: String?
     val summary: String?
@@ -268,7 +283,9 @@ internal fun Alarm.toAlarmComponent(
                                     triggerProp,
                                     summary?.let { Summary(summary) },
                                     repetition?.let { alarmRepetition ->
-                                        net.fortuna.ical4j.model.property.Duration(alarmRepetition.interval)
+                                        net.fortuna.ical4j.model.property.Duration(
+                                            alarmRepetition.interval
+                                        )
                                     },
                                     repetition?.let { alarmRepetition ->
                                         Repeat(alarmRepetition.repeat)
@@ -285,7 +302,9 @@ internal fun Alarm.toAlarmComponent(
         val calendar = CalendarBuilder().build(StringReader(originalIcs))
             .also {
                 val compList = it.getComponents<CalendarComponent>()
-                if (compList.size != 1 || compList[0].name != CalendarComponent.VEVENT || (compList[0] as VEvent).alarms.size != 1) {
+                if (compList.size != 1 || compList[0].name != CalendarComponent.VEVENT ||
+                    (compList[0] as VEvent).alarms.size != 1
+                ) {
                     throw IllegalArgumentException("Unrecognized ICS content.")
                 }
             }
@@ -314,7 +333,9 @@ internal fun Alarm.toAlarmComponent(
                 if (repetition == null) {
                     it
                 } else {
-                    it.withProperty(net.fortuna.ical4j.model.property.Duration(repetition!!.interval))
+                    it.withProperty(
+                        net.fortuna.ical4j.model.property.Duration(repetition!!.interval)
+                    )
                         .withProperty(Repeat(repetition!!.repeat))
                 }
             }

@@ -1,24 +1,19 @@
 package net.k74n3xz.ecal.core.model
 
-import net.k74n3xz.ecal.core.model.enumeration.alarm.TriggerRelationship
 import java.net.URI
 import java.time.Duration
 import java.time.Instant
+import net.k74n3xz.ecal.core.model.enumeration.alarm.TriggerRelationship
 
-data class Alarm(
-    val id: Long? = null,
-    val action: Action,
-    val trigger: Trigger,
-    val repetition: Repetition? = null
-) {
+data class Alarm(val id: Long? = null, val action: Action, val trigger: Trigger, val repetition: Repetition? = null) {
     sealed interface Action {
         data class Audio(val attach: URI) : Action {
             init {
                 /*
-                * 3.8.1.1.  Attachment
-                *   Value Type: The default value type for this property is URI.
-                *               The value type can also be set to BINARY to indicate inline binary encoded content information.
-                * */
+                 * 3.8.1.1.  Attachment
+                 *   Value Type: The default value type for this property is URI.
+                 *               The value type can also be set to BINARY to indicate inline binary encoded content information.
+                 * */
                 TODO()
             }
         }
@@ -33,7 +28,9 @@ data class Alarm(
         ) : Action {
             init {
                 if (attendee.isEmpty()) {
-                    throw IllegalArgumentException("When the action is \"EMAIL\", the alarm MUST include one or more \"ATTENDEE\" properties.")
+                    throw IllegalArgumentException(
+                        "When the action is \"EMAIL\", the alarm MUST include one or more \"ATTENDEE\" properties."
+                    )
                 }
                 TODO()
             }

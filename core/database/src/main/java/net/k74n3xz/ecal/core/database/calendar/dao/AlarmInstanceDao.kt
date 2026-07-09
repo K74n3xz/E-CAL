@@ -18,17 +18,18 @@ internal interface AlarmInstanceDao {
     @Update
     suspend fun update(vararg alarmComponents: AlarmInstance)
 
-    @Query("UPDATE alarm_instance SET alarmComponentId = NULL WHERE alarmComponentId = :alarmComponentId")
+    @Query(
+        "UPDATE alarm_instance SET alarmComponentId = NULL WHERE alarmComponentId = :alarmComponentId"
+    )
     suspend fun unlinkAlarmComponentFromAlarmInstanceByAlarmComponentId(alarmComponentId: Long)
 
     @Query("UPDATE alarm_instance SET desiredState = :desiredState WHERE id = :id")
     suspend fun updateDesiredStateById(id: Long, desiredState: DesiredState)
 
-    @Query("UPDATE alarm_instance SET desiredState = :desiredState WHERE alarmComponentId = :alarmComponentId")
-    suspend fun updateDesiredStateByAlarmComponentId(
-        alarmComponentId: Long,
-        desiredState: DesiredState
+    @Query(
+        "UPDATE alarm_instance SET desiredState = :desiredState WHERE alarmComponentId = :alarmComponentId"
     )
+    suspend fun updateDesiredStateByAlarmComponentId(alarmComponentId: Long, desiredState: DesiredState)
 
     @Query("UPDATE alarm_instance SET lastReconcileResult = :lastReconcileResult WHERE id = :id")
     suspend fun updateLastReconcileResultById(id: Long, lastReconcileResult: ReconcileResult)
@@ -42,7 +43,9 @@ internal interface AlarmInstanceDao {
     @Delete
     suspend fun delete(vararg alarmComponents: AlarmInstance)
 
-    @Query("SELECT * FROM alarm_instance WHERE desiredState = :desiredState AND lastReconcileResult != :excludedReconcileResult")
+    @Query(
+        "SELECT * FROM alarm_instance WHERE desiredState = :desiredState AND lastReconcileResult != :excludedReconcileResult"
+    )
     suspend fun queryAlarmInstancesNeedingReconciliation(
         desiredState: DesiredState,
         excludedReconcileResult: ReconcileResult

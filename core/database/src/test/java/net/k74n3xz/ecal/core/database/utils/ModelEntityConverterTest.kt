@@ -1,5 +1,7 @@
 package net.k74n3xz.ecal.core.database.utils
 
+import java.time.Duration
+import java.time.Instant
 import net.k74n3xz.ecal.core.model.Alarm
 import net.k74n3xz.ecal.core.model.Event
 import net.k74n3xz.ecal.core.model.enumeration.alarm.TriggerRelationship
@@ -9,8 +11,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.time.Duration
-import java.time.Instant
 
 class ModelEntityConverterTest {
     @Test

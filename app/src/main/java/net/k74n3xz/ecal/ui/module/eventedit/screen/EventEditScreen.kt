@@ -40,6 +40,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import java.time.Duration
+import java.time.Instant
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import net.k74n3xz.ecal.R
 import net.k74n3xz.ecal.core.model.Alarm
 import net.k74n3xz.ecal.core.model.Event
@@ -54,19 +58,10 @@ import net.k74n3xz.ecal.ui.module.eventedit.component.EventTextFieldComponent
 import net.k74n3xz.ecal.ui.module.eventedit.component.TimeFieldComponent
 import net.k74n3xz.ecal.utils.atEndOfDay
 import net.k74n3xz.ecal.utils.generateEventUid
-import java.time.Duration
-import java.time.Instant
-import java.time.ZoneId
-import java.time.ZonedDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EventEditScreen(
-    event: Event,
-    onCancel: () -> Unit,
-    onSave: (Event) -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun EventEditScreen(event: Event, onCancel: () -> Unit, onSave: (Event) -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .padding(16.dp)

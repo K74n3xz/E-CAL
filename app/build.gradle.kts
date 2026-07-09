@@ -1,6 +1,7 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
+    id("kotlin-common-conventions")
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
@@ -54,7 +55,6 @@ dependencies {
     implementation(project(":core:database"))
     implementation(project(":core:preference"))
     implementation(project(":core:application"))
-    compileOnly(libs.error.prone.annotations)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

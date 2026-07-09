@@ -8,9 +8,9 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
-import net.k74n3xz.ecal.R
 import javax.inject.Inject
 import javax.inject.Singleton
+import net.k74n3xz.ecal.R
 import net.k74n3xz.ecal.android.constant.Notification as NotificationConstant
 
 @Singleton
@@ -22,9 +22,12 @@ class ForegroundServiceNotificationHelper @Inject constructor(@param:Application
     @RequiresApi(Build.VERSION_CODES.O)
     private fun ensureChannel() {
         val channel = NotificationChannel(
-            /* id = */ NotificationConstant.Channel.FOREGROUND_SERVICE_CHANNEL_ID,
-            /* name = */ context.getString(R.string.notification_channel_name_foreground_service),
-            /* importance = */ NotificationManager.IMPORTANCE_LOW
+            /* id = */
+            NotificationConstant.Channel.FOREGROUND_SERVICE_CHANNEL_ID,
+            /* name = */
+            context.getString(R.string.notification_channel_name_foreground_service),
+            /* importance = */
+            NotificationManager.IMPORTANCE_LOW
         ).apply {
             description =
                 context.getString(R.string.notification_channel_description_foreground_service)
@@ -39,8 +42,10 @@ class ForegroundServiceNotificationHelper @Inject constructor(@param:Application
         }
 
         return NotificationCompat.Builder(
-            /* context = */ context.applicationContext,
-            /* channelId = */ NotificationConstant.Channel.FOREGROUND_SERVICE_CHANNEL_ID
+            /* context = */
+            context.applicationContext,
+            /* channelId = */
+            NotificationConstant.Channel.FOREGROUND_SERVICE_CHANNEL_ID
         ).apply {
             setSmallIcon(R.mipmap.ic_launcher_round)
             setContentTitle(title)

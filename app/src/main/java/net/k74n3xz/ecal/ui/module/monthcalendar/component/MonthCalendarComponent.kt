@@ -38,13 +38,13 @@ import com.kizitonwose.calendar.core.DayPosition
 import com.kizitonwose.calendar.core.OutDateStyle
 import com.kizitonwose.calendar.core.firstDayOfWeekFromLocale
 import com.kizitonwose.calendar.core.yearMonth
-import kotlinx.coroutines.launch
-import net.k74n3xz.ecal.R
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
+import kotlinx.coroutines.launch
+import net.k74n3xz.ecal.R
 
 @Composable
 fun MonthCalendarComponent(
@@ -131,12 +131,14 @@ private fun Day(
             .clip(CircleShape)
             .let {
                 if (isSelected) {
-                    it.background(MaterialTheme.colorScheme.primary.let { bgColor ->
-                        when (day.position) {
-                            DayPosition.MonthDate -> bgColor
-                            else -> bgColor.copy(alpha = 0.4f)
+                    it.background(
+                        MaterialTheme.colorScheme.primary.let { bgColor ->
+                            when (day.position) {
+                                DayPosition.MonthDate -> bgColor
+                                else -> bgColor.copy(alpha = 0.4f)
+                            }
                         }
-                    })
+                    )
                 } else {
                     it
                 }
@@ -182,18 +184,20 @@ private fun Day(
                         modifier = Modifier
                             .size(dotHeight)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.let {
-                                if (isSelected) {
-                                    it.onPrimary
-                                } else {
-                                    it.primary
+                            .background(
+                                MaterialTheme.colorScheme.let {
+                                    if (isSelected) {
+                                        it.onPrimary
+                                    } else {
+                                        it.primary
+                                    }
+                                }.let {
+                                    when (day.position) {
+                                        DayPosition.MonthDate -> it
+                                        else -> it.copy(alpha = 0.4f)
+                                    }
                                 }
-                            }.let {
-                                when (day.position) {
-                                    DayPosition.MonthDate -> it
-                                    else -> it.copy(alpha = 0.4f)
-                                }
-                            })
+                            )
                     )
                 } else {
                     Spacer(modifier = Modifier.height(dotHeight))

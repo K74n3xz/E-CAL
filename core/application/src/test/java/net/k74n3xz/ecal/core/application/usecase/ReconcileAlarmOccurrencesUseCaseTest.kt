@@ -1,5 +1,6 @@
 package net.k74n3xz.ecal.core.application.usecase
 
+import java.time.Instant
 import kotlinx.coroutines.test.runTest
 import net.k74n3xz.ecal.core.application.port.AlarmScheduler
 import net.k74n3xz.ecal.core.application.repository.AlarmRepository
@@ -7,7 +8,6 @@ import net.k74n3xz.ecal.core.model.Alarm
 import net.k74n3xz.ecal.core.model.AlarmOccurrence
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import java.time.Instant
 
 class ReconcileAlarmOccurrencesUseCaseTest {
     private val triggerAt = Instant.parse("2026-07-04T01:00:00Z")
@@ -55,9 +55,8 @@ class ReconcileAlarmOccurrencesUseCaseTest {
     }
 }
 
-private class ReconcileRepository(
-    private val reconciliation: Pair<List<AlarmOccurrence>, List<AlarmOccurrence>>
-) : AlarmRepository {
+private class ReconcileRepository(private val reconciliation: Pair<List<AlarmOccurrence>, List<AlarmOccurrence>>) :
+    AlarmRepository {
     val transitions = mutableListOf<String>()
 
     override suspend fun getDueAlarmOccurrenceIdsAndActions(triggerAt: Instant) =
@@ -80,10 +79,8 @@ private class ReconcileRepository(
     override suspend fun markAllAlarmOccurrencesAsCancelled() = Unit
 }
 
-private class RecordingScheduler(
-    private val transitions: MutableList<String>,
-    private val failure: Exception? = null
-) : AlarmScheduler {
+private class RecordingScheduler(private val transitions: MutableList<String>, private val failure: Exception? = null) :
+    AlarmScheduler {
     override fun schedule(id: Long, triggerAt: Instant) {
         transitions += "schedule:$id:$triggerAt"
         failure?.let { throw it }

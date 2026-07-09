@@ -1,14 +1,12 @@
 plugins {
-    alias(libs.plugins.android.library)
+    id("kotlin-common-conventions")
+    id("android-library-conventions")
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt.plugin)
 }
 
 android {
     namespace = "net.k74n3xz.ecal.core.database"
-    compileSdk {
-        version = release(37)
-    }
 
     defaultConfig {
         minSdk = 24
@@ -16,11 +14,8 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
         isCoreLibraryDesugaringEnabled = true
     }
-
 }
 
 dependencies {

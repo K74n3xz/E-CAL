@@ -1,8 +1,8 @@
 package net.k74n3xz.ecal.core.application.repository
 
+import java.time.Instant
 import net.k74n3xz.ecal.core.model.Alarm
 import net.k74n3xz.ecal.core.model.AlarmOccurrence
-import java.time.Instant
 
 interface AlarmRepository {
     suspend fun getDueAlarmOccurrenceIdsAndActions(triggerAt: Instant): List<Pair<LongArray, Alarm.Action>>

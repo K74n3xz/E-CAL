@@ -1,13 +1,13 @@
 package net.k74n3xz.ecal.core.database.calendar.entity
 
+import java.time.Duration
+import java.time.Instant
 import net.k74n3xz.ecal.core.model.enumeration.alarm.Action
 import net.k74n3xz.ecal.core.model.enumeration.alarm.TriggerRelationship
 import net.k74n3xz.ecal.core.model.enumeration.alarm.TriggerType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Test
-import java.time.Duration
-import java.time.Instant
 
 class CalendarEntityValidationTest {
     @Test

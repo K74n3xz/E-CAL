@@ -26,8 +26,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             AppRoot()
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
-            && applicationContext.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            applicationContext.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
         ) {
             permissionRequestLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
@@ -35,8 +36,10 @@ class MainActivity : ComponentActivity() {
             val alarmManager = applicationContext.getSystemService(AlarmManager::class.java)
             if (!alarmManager.canScheduleExactAlarms()) {
                 val intent = Intent(
-                    /* action = */ Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
-                    /* uri = */ "package:${applicationContext.packageName}".toUri()
+                    /* action = */
+                    Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
+                    /* uri = */
+                    "package:${applicationContext.packageName}".toUri()
                 )
                 startActivity(intent)
             }

@@ -11,12 +11,12 @@ import androidx.work.PeriodicWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import dagger.hilt.android.qualifiers.ApplicationContext
-import net.k74n3xz.ecal.android.components.service.AlarmReconciliationService
-import net.k74n3xz.ecal.android.work.AlarmReconciliationWorker
-import net.k74n3xz.ecal.core.application.port.AlarmOccurrenceReconciler
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
+import net.k74n3xz.ecal.android.components.service.AlarmReconciliationService
+import net.k74n3xz.ecal.android.work.AlarmReconciliationWorker
+import net.k74n3xz.ecal.core.application.port.AlarmOccurrenceReconciler
 
 @Singleton
 class AndroidAlarmOccurrenceReconciler @Inject constructor(@param:ApplicationContext private val context: Context) :

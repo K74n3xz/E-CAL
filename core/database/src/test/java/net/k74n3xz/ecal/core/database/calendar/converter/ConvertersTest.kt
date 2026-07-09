@@ -1,12 +1,12 @@
 package net.k74n3xz.ecal.core.database.calendar.converter
 
+import java.time.Duration
+import java.time.Instant
+import java.time.format.DateTimeParseException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Test
-import java.time.Duration
-import java.time.Instant
-import java.time.format.DateTimeParseException
 
 class ConvertersTest {
     private val converters = Converters()

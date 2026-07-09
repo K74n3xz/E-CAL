@@ -17,6 +17,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import net.k74n3xz.ecal.R
 import net.k74n3xz.ecal.core.model.Event
 import net.k74n3xz.ecal.core.model.enumeration.event.EventStatus
@@ -24,9 +27,6 @@ import net.k74n3xz.ecal.ui.compositionlocal.LocalTimeZone
 import net.k74n3xz.ecal.ui.module.monthcalendar.component.EventListComponent
 import net.k74n3xz.ecal.ui.module.monthcalendar.component.MonthCalendarComponent
 import net.k74n3xz.ecal.utils.generateEventUid
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
 
 @Composable
 fun MonthCalendarScreen(

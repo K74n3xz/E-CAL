@@ -3,6 +3,8 @@ package net.k74n3xz.ecal.ui.module.eventedit.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,8 +16,6 @@ import net.k74n3xz.ecal.core.application.usecase.SaveEventUseCase
 import net.k74n3xz.ecal.core.model.Event
 import net.k74n3xz.ecal.ui.module.eventedit.viewmodel.state.EditMode
 import net.k74n3xz.ecal.ui.module.eventedit.viewmodel.state.EditOperationState
-import javax.inject.Inject
-import kotlin.coroutines.cancellation.CancellationException
 
 @HiltViewModel
 class EventEditViewModel @Inject constructor(
@@ -102,8 +102,8 @@ class EventEditViewModel @Inject constructor(
     fun saveEvent(event: Event) {
         val uiStateSnapshot = _uiState.value
 
-        if (uiStateSnapshot.operationState !is EditOperationState.Idle
-            && uiStateSnapshot.operationState !is EditOperationState.Failed
+        if (uiStateSnapshot.operationState !is EditOperationState.Idle &&
+            uiStateSnapshot.operationState !is EditOperationState.Failed
         ) {
             return
         }
@@ -131,8 +131,8 @@ class EventEditViewModel @Inject constructor(
     fun deleteEvent(event: Event) {
         val uiStateSnapshot = _uiState.value
 
-        if (uiStateSnapshot.operationState !is EditOperationState.Idle
-            && uiStateSnapshot.operationState !is EditOperationState.Failed
+        if (uiStateSnapshot.operationState !is EditOperationState.Idle &&
+            uiStateSnapshot.operationState !is EditOperationState.Failed
         ) {
             return
         }
@@ -160,8 +160,8 @@ class EventEditViewModel @Inject constructor(
     fun requestBack() {
         val uiStateSnapshot = _uiState.value
 
-        if (uiStateSnapshot.operationState !is EditOperationState.Idle
-            && uiStateSnapshot.operationState !is EditOperationState.Failed
+        if (uiStateSnapshot.operationState !is EditOperationState.Idle &&
+            uiStateSnapshot.operationState !is EditOperationState.Failed
         ) {
             return
         }

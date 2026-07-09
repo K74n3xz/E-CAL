@@ -1,10 +1,10 @@
 package net.k74n3xz.ecal.core.database.utils
 
+import java.time.Duration
+import java.time.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
-import java.time.Duration
-import java.time.Instant
 
 class AlarmRepeatTest {
     private val firstTriggerAt = Instant.parse("2026-06-28T01:00:00Z")

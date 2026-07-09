@@ -26,11 +26,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import net.k74n3xz.ecal.R
 
 @Composable
-fun DeletionConfirmationDialog(
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun DeletionConfirmationDialog(onDismiss: () -> Unit, onConfirm: () -> Unit, modifier: Modifier = Modifier) {
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {

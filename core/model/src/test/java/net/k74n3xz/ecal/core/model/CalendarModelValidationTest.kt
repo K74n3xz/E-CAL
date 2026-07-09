@@ -1,10 +1,10 @@
 package net.k74n3xz.ecal.core.model
 
+import java.time.Duration
 import net.k74n3xz.ecal.core.model.enumeration.alarm.TriggerRelationship
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Test
-import java.time.Duration
 
 class CalendarModelValidationTest {
     @Test

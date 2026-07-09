@@ -7,15 +7,15 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.ServiceCompat
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import net.k74n3xz.ecal.R
+import net.k74n3xz.ecal.android.constant.Notification as NotificationConstant
 import net.k74n3xz.ecal.android.helper.notification.ForegroundServiceNotificationHelper
 import net.k74n3xz.ecal.core.application.usecase.ReconcileAlarmOccurrencesUseCase
-import javax.inject.Inject
-import net.k74n3xz.ecal.android.constant.Notification as NotificationConstant
 
 @AndroidEntryPoint
 class AlarmReconciliationService : Service() {
@@ -43,8 +43,11 @@ class AlarmReconciliationService : Service() {
                 text = getString(R.string.notification_text_reconciling_alarms)
             ),
             /* foregroundServiceType = */
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) ServiceInfo.FOREGROUND_SERVICE_TYPE_SHORT_SERVICE
-            else FOREGROUND_SERVICE_TYPE_NONE_COMPAT
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_SHORT_SERVICE
+            } else {
+                FOREGROUND_SERVICE_TYPE_NONE_COMPAT
+            }
         )
 
         serviceScope.launch {

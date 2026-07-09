@@ -31,10 +31,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import net.k74n3xz.ecal.R
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+import net.k74n3xz.ecal.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,7 +42,8 @@ fun TimeFieldComponent(
     time: LocalTime,
     onPickTime: (LocalTime) -> Unit,
     modifier: Modifier = Modifier,
-    is24Hour: Boolean = true  // TODO: Use the system time format setting as the default.
+    is24Hour: Boolean = true
+// TODO: Use the system time format setting as the default.
 ) {
     // TODO: Make the displayed value honor is24Hour.
     val timeFormatter = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)
@@ -59,8 +60,10 @@ fun TimeFieldComponent(
         trailingIcon = {
             IconButton(onClick = { isShowingDialog = true }) {
                 Icon(
-                    imageVector = Icons.Outlined.Edit,  // TODO: Use a time-specific edit icon when one is available.
-                    contentDescription = stringResource(R.string.text_field_trailing_icon_content_description_select_time)
+                    imageVector = Icons.Outlined.Edit, // TODO: Use a time-specific edit icon when one is available.
+                    contentDescription = stringResource(
+                        R.string.text_field_trailing_icon_content_description_select_time
+                    )
                 )
             }
         },
@@ -104,12 +107,16 @@ fun TimeFieldComponent(
                     if (isUsingPicker) {
                         Icon(
                             imageVector = Icons.Filled.Edit,
-                            contentDescription = stringResource(R.string.button_content_description_switch_to_text_input)
+                            contentDescription = stringResource(
+                                R.string.button_content_description_switch_to_text_input
+                            )
                         )
                     } else {
                         Icon(
                             imageVector = Icons.Filled.MoreVert,
-                            contentDescription = stringResource(R.string.button_content_description_switch_to_clock_picker)
+                            contentDescription = stringResource(
+                                R.string.button_content_description_switch_to_clock_picker
+                            )
                         )
                     }
                 }

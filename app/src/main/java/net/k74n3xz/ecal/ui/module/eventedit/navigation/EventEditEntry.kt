@@ -25,6 +25,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
+import java.time.Instant
 import net.k74n3xz.ecal.R
 import net.k74n3xz.ecal.core.model.Event
 import net.k74n3xz.ecal.ui.module.eventedit.component.DeletionConfirmationDialog
@@ -37,7 +38,6 @@ import net.k74n3xz.ecal.ui.module.eventedit.viewmodel.state.EditMode
 import net.k74n3xz.ecal.ui.module.eventedit.viewmodel.state.EditOperationState
 import net.k74n3xz.ecal.ui.root.navigation.NavHostAction
 import net.k74n3xz.ecal.utils.generateEventUid
-import java.time.Instant
 
 const val TAG: String = "EventEditEntry"
 
@@ -45,24 +45,27 @@ fun EntryProviderScope<NavKey>.registerEventEditEntry(
     registerNavHostAction: @Composable (NavKey, NavHostAction) -> Unit,
     backToParent: () -> Unit
 ) {
-    entry<EventEdit> {
+    entry<EventEditNavKey> {
         val operationFailedMessage = stringResource(R.string.error_event_operation_failed)
 
         val viewModel: EventEditViewModel = hiltViewModel()
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-        val isBusy = uiState.operationState is EditOperationState.Initializing
-                || uiState.operationState is EditOperationState.Saving
-                || uiState.operationState is EditOperationState.Deleting
+        val isBusy = uiState.operationState is EditOperationState.Initializing ||
+            uiState.operationState is EditOperationState.Saving ||
+            uiState.operationState is EditOperationState.Deleting
 
         var isConfirmingDeletion by rememberSaveable { mutableStateOf(false) }
         val snackbarHostState = remember { SnackbarHostState() }
 
-        registerNavHostAction(it, object : NavHostAction {
-            override fun requestBack() {
-                viewModel.requestBack()
+        registerNavHostAction(
+            it,
+            object : NavHostAction {
+                override fun requestBack() {
+                    viewModel.requestBack()
+                }
             }
-        })
+        )
 
         LaunchedEffect(Unit) {
             if (it.eventUid == null) {

@@ -1,10 +1,10 @@
 package net.k74n3xz.ecal.utils
 
-import org.junit.Assert.assertEquals
-import org.junit.Test
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import org.junit.Assert.assertEquals
+import org.junit.Test
 
 class JavaTimeUtilsTest {
     @Test

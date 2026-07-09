@@ -19,7 +19,7 @@ fun EntryProviderScope<NavKey>.registerMonthCalendarEntry(
     navigateToAddEvent: () -> Unit,
     navigateToEditEvent: (Event) -> Unit
 ) {
-    entry<MonthCalendar> {
+    entry<MonthCalendarNavKey> {
         val viewModel: MonthCalenderViewModel = hiltViewModel()
 
         val busyDates by viewModel.busyDatesRecently.collectAsStateWithLifecycle()

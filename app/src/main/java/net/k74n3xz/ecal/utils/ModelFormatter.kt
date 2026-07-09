@@ -1,9 +1,9 @@
 package net.k74n3xz.ecal.utils
 
-import net.k74n3xz.ecal.core.model.Event
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+import net.k74n3xz.ecal.core.model.Event
 
 internal fun Event.formatTimeRange(dateTimeStyle: FormatStyle, zone: ZoneId): String {
     val formatter = if (isAllDayEvent) {

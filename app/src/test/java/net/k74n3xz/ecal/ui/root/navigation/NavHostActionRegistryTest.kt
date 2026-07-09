@@ -1,7 +1,7 @@
 package net.k74n3xz.ecal.ui.root.navigation
 
-import net.k74n3xz.ecal.ui.module.eventedit.navigation.EventEdit
-import net.k74n3xz.ecal.ui.module.monthcalendar.navigation.MonthCalendar
+import net.k74n3xz.ecal.ui.module.eventedit.navigation.EventEditNavKey
+import net.k74n3xz.ecal.ui.module.monthcalendar.navigation.MonthCalendarNavKey
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
@@ -13,17 +13,17 @@ class NavHostActionRegistryTest {
     @Test
     fun registerAndGet_returnsActionForMatchingKeyOnly() {
         val action = TestAction()
-        val key = EventEdit("event-1")
+        val key = EventEditNavKey("event-1")
         registry.register(key, action)
 
         assertSame(action, registry[key])
-        assertNull(registry[EventEdit("event-2")])
-        assertNull(registry[MonthCalendar])
+        assertNull(registry[EventEditNavKey("event-2")])
+        assertNull(registry[MonthCalendarNavKey])
     }
 
     @Test
     fun register_sameKey_replacesPreviousAction() {
-        val key = EventEdit("event-1")
+        val key = EventEditNavKey("event-1")
         val replacement = TestAction()
         registry.register(key, TestAction())
 
@@ -34,7 +34,7 @@ class NavHostActionRegistryTest {
 
     @Test
     fun unregister_removesActionAndIsIdempotent() {
-        val key = EventEdit("event-1")
+        val key = EventEditNavKey("event-1")
         registry.register(key, TestAction())
 
         registry.unregister(key)
@@ -47,19 +47,19 @@ class NavHostActionRegistryTest {
     fun unregister_oneKey_doesNotAffectAnotherKey() {
         val eventAction = TestAction()
         val monthAction = TestAction()
-        val eventKey = EventEdit("event-1")
+        val eventKey = EventEditNavKey("event-1")
         registry.register(eventKey, eventAction)
-        registry.register(MonthCalendar, monthAction)
+        registry.register(MonthCalendarNavKey, monthAction)
 
         registry.unregister(eventKey)
 
         assertNull(registry[eventKey])
-        assertSame(monthAction, registry[MonthCalendar])
+        assertSame(monthAction, registry[MonthCalendarNavKey])
     }
 
     @Test
     fun replacedAction_onlyLatestActionIsInvoked() {
-        val key = EventEdit("event-1")
+        val key = EventEditNavKey("event-1")
         val original = TestAction()
         val replacement = TestAction()
         registry.register(key, original)

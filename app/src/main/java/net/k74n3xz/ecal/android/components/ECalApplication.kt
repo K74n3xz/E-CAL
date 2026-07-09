@@ -4,12 +4,14 @@ import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import dagger.hilt.android.HiltAndroidApp
+import javax.inject.Inject
 import net.k74n3xz.ecal.android.work.scheduler.DueAlarmHandlingScheduler
 import net.k74n3xz.ecal.core.application.port.AlarmOccurrenceReconciler
-import javax.inject.Inject
 
 @HiltAndroidApp
-class ECalApplication : Application(), Configuration.Provider {
+class ECalApplication :
+    Application(),
+    Configuration.Provider {
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
 
