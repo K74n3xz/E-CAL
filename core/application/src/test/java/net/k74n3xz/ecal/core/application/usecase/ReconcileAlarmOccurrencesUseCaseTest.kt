@@ -1,93 +1,159 @@
 package net.k74n3xz.ecal.core.application.usecase
 
-import java.time.Instant
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import net.k74n3xz.ecal.core.application.port.AlarmScheduler
-import net.k74n3xz.ecal.core.application.repository.AlarmRepository
-import net.k74n3xz.ecal.core.model.Alarm
 import net.k74n3xz.ecal.core.model.AlarmOccurrence
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class ReconcileAlarmOccurrencesUseCaseTest {
-    private val triggerAt = Instant.parse("2026-07-04T01:00:00Z")
+    private val triggerAt = ApplicationUseCaseTestData.later
+    private val noOccurrences = emptyList<AlarmOccurrence>()
 
     @Test
     fun cancellation_marksUnknownBeforeSystemOperation_thenCancelled() = runTest {
-        val repository = ReconcileRepository(
-            reconciliation = listOf(AlarmOccurrence(1, 10, triggerAt)) to emptyList()
-        )
-        val scheduler = RecordingScheduler(repository.transitions)
+        val fixture = Fixture(listOf(ApplicationUseCaseTestData.occurrence(1)) to noOccurrences)
 
-        ReconcileAlarmOccurrencesUseCase(repository, scheduler)()
+        fixture.useCase()
 
-        assertEquals(listOf("unknown:1", "cancel:1", "cancelled:1"), repository.transitions)
+        assertEquals(listOf("getReconciliation", "unknown:1", "cancel:1", "cancelled:1"), fixture.calls)
     }
 
     @Test
     fun scheduling_marksUnknownBeforeSystemOperation_thenScheduled() = runTest {
-        val repository = ReconcileRepository(
-            emptyList<AlarmOccurrence>() to listOf(AlarmOccurrence(2, 20, triggerAt))
-        )
-        val scheduler = RecordingScheduler(repository.transitions)
+        val fixture = Fixture(noOccurrences to listOf(ApplicationUseCaseTestData.occurrence(2)))
 
-        ReconcileAlarmOccurrencesUseCase(repository, scheduler)()
+        fixture.useCase()
+
+        assertEquals(listOf("getReconciliation", "unknown:2", "schedule:2:$triggerAt", "scheduled:2"), fixture.calls)
+    }
+
+    @Test
+    fun mixedCancellationAndScheduling_processesAllCancellationsBeforeSchedules() = runTest {
+        val fixture = Fixture(
+            listOf(
+                ApplicationUseCaseTestData.occurrence(1),
+                ApplicationUseCaseTestData.occurrence(2)
+            ) to listOf(
+                ApplicationUseCaseTestData.occurrence(3),
+                ApplicationUseCaseTestData.occurrence(4)
+            )
+        )
+
+        fixture.useCase()
 
         assertEquals(
-            listOf("unknown:2", "schedule:2:$triggerAt", "scheduled:2"),
-            repository.transitions
+            listOf(
+                "getReconciliation",
+                "unknown:1",
+                "cancel:1",
+                "cancelled:1",
+                "unknown:2",
+                "cancel:2",
+                "cancelled:2",
+                "unknown:3",
+                "schedule:3:$triggerAt",
+                "scheduled:3",
+                "unknown:4",
+                "schedule:4:$triggerAt",
+                "scheduled:4"
+            ),
+            fixture.calls
         )
     }
 
     @Test
-    fun schedulerFailure_leavesOccurrenceUnknownAndPropagates() = runTest {
+    fun scheduleFailure_leavesOccurrenceUnknownAndPropagates() = runTest {
         val failure = IllegalStateException("scheduler failed")
-        val repository = ReconcileRepository(
-            emptyList<AlarmOccurrence>() to listOf(AlarmOccurrence(3, 30, triggerAt))
-        )
-        val scheduler = RecordingScheduler(repository.transitions, failure)
+        val fixture = Fixture(noOccurrences to listOf(ApplicationUseCaseTestData.occurrence(3)))
+        fixture.scheduler.scheduleFailure = failure
 
-        val thrown = runCatching { ReconcileAlarmOccurrencesUseCase(repository, scheduler)() }
-            .exceptionOrNull()
+        val thrown = runCatching { fixture.useCase() }.exceptionOrNull()
 
         assertEquals(failure, thrown)
-        assertEquals(listOf("unknown:3", "schedule:3:$triggerAt"), repository.transitions)
-    }
-}
-
-private class ReconcileRepository(private val reconciliation: Pair<List<AlarmOccurrence>, List<AlarmOccurrence>>) :
-    AlarmRepository {
-    val transitions = mutableListOf<String>()
-
-    override suspend fun getDueAlarmOccurrenceIdsAndActions(triggerAt: Instant) =
-        emptyList<Pair<LongArray, Alarm.Action>>()
-
-    override suspend fun processDueAlarmOccurrence(alarmOccurrenceId: Long) = Unit
-    override suspend fun getAlarmOccurrenceNeedingReconciliation() = reconciliation
-    override suspend fun markAlarmOccurrenceAsCancelled(alarmOccurrenceId: Long) {
-        transitions += "cancelled:$alarmOccurrenceId"
+        assertEquals(listOf("getReconciliation", "unknown:3", "schedule:3:$triggerAt"), fixture.calls)
     }
 
-    override suspend fun markAlarmOccurrenceAsScheduled(alarmOccurrenceId: Long) {
-        transitions += "scheduled:$alarmOccurrenceId"
+    @Test
+    fun cancelFailure_leavesOccurrenceUnknownAndPropagates() = runTest {
+        val failure = IllegalStateException("cancel failed")
+        val fixture = Fixture(listOf(ApplicationUseCaseTestData.occurrence(5)) to noOccurrences)
+        fixture.scheduler.cancelFailure = failure
+
+        val thrown = runCatching { fixture.useCase() }.exceptionOrNull()
+
+        assertEquals(failure, thrown)
+        assertEquals(listOf("getReconciliation", "unknown:5", "cancel:5"), fixture.calls)
     }
 
-    override suspend fun markAlarmOccurrenceAsUnknown(alarmOccurrenceId: Long) {
-        transitions += "unknown:$alarmOccurrenceId"
+    @Test
+    fun markUnknownFailure_preventsSystemOperationAndPropagates() = runTest {
+        val failure = IllegalStateException("unknown failed")
+        val fixture = Fixture(listOf(ApplicationUseCaseTestData.occurrence(6)) to noOccurrences)
+        fixture.repository.markUnknownFailure = failure
+
+        val thrown = runCatching { fixture.useCase() }.exceptionOrNull()
+
+        assertEquals(failure, thrown)
+        assertEquals(listOf("getReconciliation", "unknown:6"), fixture.calls)
     }
 
-    override suspend fun markAllAlarmOccurrencesAsCancelled() = Unit
-}
+    @Test
+    fun finalCancelledMarkFailure_propagatesAfterSystemCancel() = runTest {
+        val failure = IllegalStateException("cancelled mark failed")
+        val fixture = Fixture(listOf(ApplicationUseCaseTestData.occurrence(7)) to noOccurrences)
+        fixture.repository.markCancelledFailure = failure
 
-private class RecordingScheduler(private val transitions: MutableList<String>, private val failure: Exception? = null) :
-    AlarmScheduler {
-    override fun schedule(id: Long, triggerAt: Instant) {
-        transitions += "schedule:$id:$triggerAt"
-        failure?.let { throw it }
+        val thrown = runCatching { fixture.useCase() }.exceptionOrNull()
+
+        assertEquals(failure, thrown)
+        assertEquals(listOf("getReconciliation", "unknown:7", "cancel:7", "cancelled:7"), fixture.calls)
     }
 
-    override fun cancel(id: Long) {
-        transitions += "cancel:$id"
-        failure?.let { throw it }
+    @Test
+    fun finalScheduledMarkFailure_propagatesAfterSystemSchedule() = runTest {
+        val failure = IllegalStateException("scheduled mark failed")
+        val fixture = Fixture(noOccurrences to listOf(ApplicationUseCaseTestData.occurrence(8)))
+        fixture.repository.markScheduledFailure = failure
+
+        val thrown = runCatching { fixture.useCase() }.exceptionOrNull()
+
+        assertEquals(failure, thrown)
+        assertEquals(listOf("getReconciliation", "unknown:8", "schedule:8:$triggerAt", "scheduled:8"), fixture.calls)
+    }
+
+    @Test
+    fun concurrentInvocations_areSerialized() = runTest {
+        val releaseFirstQuery = CompletableDeferred<Unit>()
+        val fixture = Fixture()
+        fixture.repository.firstReconciliationQueryRelease = releaseFirstQuery
+
+        val first = async { fixture.useCase() }
+        runCurrent()
+        assertEquals(1, fixture.repository.reconciliationQueryCount)
+
+        val second = async { fixture.useCase() }
+        runCurrent()
+        assertEquals(1, fixture.repository.reconciliationQueryCount)
+
+        releaseFirstQuery.complete(Unit)
+        first.await()
+        second.await()
+
+        assertEquals(2, fixture.repository.reconciliationQueryCount)
+        assertEquals(listOf("getReconciliation", "getReconciliation"), fixture.calls)
+    }
+
+    private class Fixture(
+        reconciliation: Pair<List<AlarmOccurrence>, List<AlarmOccurrence>> = emptyList<AlarmOccurrence>() to emptyList()
+    ) {
+        val calls = mutableListOf<String>()
+        val repository = RecordingAlarmRepository(calls, reconciliation = reconciliation)
+        val scheduler = RecordingScheduler(calls)
+        val useCase = ReconcileAlarmOccurrencesUseCase(repository, scheduler)
     }
 }
