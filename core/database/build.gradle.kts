@@ -27,6 +27,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.runtime)
+    androidTestImplementation(libs.androidx.room.testing)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt)
     testImplementation(libs.junit)

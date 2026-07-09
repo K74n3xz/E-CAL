@@ -1,21 +1,12 @@
 package net.k74n3xz.ecal.core.database
 
-import android.content.Context
-import androidx.room.Room
-import androidx.test.core.app.ApplicationProvider
 import java.time.Duration
-import java.time.Instant
 import kotlinx.coroutines.test.runTest
 import net.k74n3xz.ecal.core.database.calendar.CalendarDatabase
-import net.k74n3xz.ecal.core.database.calendar.entity.AlarmComponent
-import net.k74n3xz.ecal.core.database.calendar.entity.AlarmInstance
-import net.k74n3xz.ecal.core.database.calendar.entity.EventComponent
 import net.k74n3xz.ecal.core.database.calendar.entity.enumeration.alarminstance.DesiredState
 import net.k74n3xz.ecal.core.database.calendar.entity.enumeration.alarminstance.ReconcileResult
 import net.k74n3xz.ecal.core.database.repository.DatabaseAlarmRepository
 import net.k74n3xz.ecal.core.model.Alarm
-import net.k74n3xz.ecal.core.model.enumeration.alarm.Action
-import net.k74n3xz.ecal.core.model.enumeration.alarm.TriggerType
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -25,136 +16,228 @@ import org.junit.Test
 class DatabaseAlarmRepositoryTest {
     private lateinit var database: CalendarDatabase
     private lateinit var repository: DatabaseAlarmRepository
-    private val now = Instant.parse("2026-07-04T12:00:00Z")
 
     @Before
     fun setUp() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        database = Room.inMemoryDatabaseBuilder(context, CalendarDatabase::class.java)
-            .allowMainThreadQueries()
-            .build()
-        repository =
-            DatabaseAlarmRepository(
-                database,
-                database.eventComponentDao(),
-                database.alarmComponentDao(),
-                database.alarmInstanceDao(),
-                database.alarmDao()
-            )
+        database = createInMemoryCalendarDatabase()
+        repository = DatabaseAlarmRepository(
+            database,
+            database.eventComponentDao(),
+            database.alarmComponentDao(),
+            database.alarmInstanceDao(),
+            database.alarmDao()
+        )
     }
 
     @After
     fun tearDown() = database.close()
 
     @Test
-    fun dueQuery_joinsEachInstanceToItsOwnComponentAndFiltersStateAndTime() = runTest {
-        insertEvent("event-a")
-        insertEvent("event-b")
-        val alarmA = insertAlarm("event-a", "A")
-        val alarmB = insertAlarm("event-b", "B")
-        insertInstance(alarmA, now.minusSeconds(1), DesiredState.ACTIVE)
-        insertInstance(alarmB, now.minusSeconds(2), DesiredState.ACTIVE)
-        insertInstance(alarmA, now.plusSeconds(1), DesiredState.ACTIVE)
-        insertInstance(alarmB, now.minusSeconds(3), DesiredState.INACTIVE)
+    fun getDueAlarmOccurrenceIdsAndActions_groupsMultipleDueInstancesByAlarmComponent() = runTest {
+        database.insertEventComponent("event-a")
+        database.insertEventComponent("event-b")
+        val alarmA = database.insertAlarmComponent("event-a", description = "A")
+        val alarmB = database.insertAlarmComponent("event-b", description = "B")
+        database.insertAlarmInstance(alarmA, id = 101, triggerAt = TestInstant.minusSeconds(2))
+        database.insertAlarmInstance(alarmA, id = 102, triggerAt = TestInstant.minusSeconds(1))
+        database.insertAlarmInstance(alarmB, id = 201, triggerAt = TestInstant)
 
-        val due = repository.getDueAlarmOccurrenceIdsAndActions(now)
+        val due = repository.getDueAlarmOccurrenceIdsAndActions(TestInstant)
 
         assertEquals(2, due.size)
-        assertEquals(
-            setOf("A", "B"),
-            due.map { (it.second as Alarm.Action.Display).description }.toSet()
+        val dueByDescription = due.associateBy { (_, action) ->
+            (action as Alarm.Action.Display).description
+        }
+        assertEquals(setOf(101L, 102L), dueByDescription.getValue("A").first.toSet())
+        assertEquals(setOf(201L), dueByDescription.getValue("B").first.toSet())
+    }
+
+    @Test
+    fun getDueAlarmOccurrenceIdsAndActions_excludesFutureAndInactiveOccurrences() = runTest {
+        database.insertEventComponent("event")
+        val alarm = database.insertAlarmComponent("event", description = "due")
+        database.insertAlarmInstance(alarm, id = 101, triggerAt = TestInstant.minusSeconds(1))
+        database.insertAlarmInstance(alarm, id = 102, triggerAt = TestInstant.plusSeconds(1))
+        database.insertAlarmInstance(
+            alarm,
+            id = 103,
+            triggerAt = TestInstant.minusSeconds(2),
+            desiredState = DesiredState.INACTIVE
         )
-        assertEquals(2, due.sumOf { it.first.size })
+
+        val due = repository.getDueAlarmOccurrenceIdsAndActions(TestInstant)
+
+        assertEquals(1, due.size)
+        assertEquals(listOf(101L), due.single().first.toList())
     }
 
     @Test
     fun processDueOccurrence_marksItInactiveAndDoesNotCreateNextForNonRepeatingAlarm() = runTest {
-        insertEvent("event")
-        val alarmId = insertAlarm("event", "once")
-        insertInstance(alarmId, now.minusSeconds(1), DesiredState.ACTIVE)
-        val occurrenceId =
-            repository.getDueAlarmOccurrenceIdsAndActions(now).single().first.single()
+        database.insertEventComponent("event")
+        val alarmId = database.insertAlarmComponent("event", description = "once")
+        database.insertAlarmInstance(alarmId, id = 101, triggerAt = TestInstant.minusSeconds(1))
 
-        repository.processDueAlarmOccurrence(occurrenceId)
+        repository.processDueAlarmOccurrence(101)
 
-        assertTrue(repository.getDueAlarmOccurrenceIdsAndActions(now.plusSeconds(60)).isEmpty())
-        val needingReconciliation = repository.getAlarmOccurrenceNeedingReconciliation()
-        assertTrue(needingReconciliation.first.isEmpty())
-        assertTrue(needingReconciliation.second.isEmpty())
+        assertTrue(repository.getDueAlarmOccurrenceIdsAndActions(TestInstant.plusSeconds(60)).isEmpty())
+        assertEquals(
+            listOf(
+                AlarmInstanceSnapshot(
+                    id = 101,
+                    alarmComponentId = alarmId,
+                    triggerAt = TestInstant.minusSeconds(1),
+                    desiredState = DesiredState.INACTIVE,
+                    lastReconcileResult = ReconcileResult.CANCELLED
+                )
+            ),
+            database.queryAlarmInstanceSnapshots()
+        )
     }
 
     @Test
     fun processDueOccurrence_createsNextOccurrenceForRepeatingAlarm() = runTest {
-        insertEvent("event")
-        val alarmId = insertAlarm("event", "repeat", Duration.ofMinutes(5), repeat = 2)
-        insertInstance(alarmId, now, DesiredState.ACTIVE)
-        val occurrenceId =
-            repository.getDueAlarmOccurrenceIdsAndActions(now).single().first.single()
-
-        repository.processDueAlarmOccurrence(occurrenceId)
-
-        assertTrue(repository.getDueAlarmOccurrenceIdsAndActions(now).isEmpty())
-        val toSchedule = repository.getAlarmOccurrenceNeedingReconciliation().second
-        assertEquals(1, toSchedule.size)
-        assertEquals(now.plus(Duration.ofMinutes(5)), toSchedule.single().triggerAt)
-    }
-
-    private suspend fun insertEvent(uid: String) {
-        database.eventComponentDao()
-            .insert(
-                EventComponent(
-                    uid = uid,
-                    createdAt = now,
-                    updatedAt = now,
-                    summary = uid,
-                    description = null,
-                    location = null,
-                    startAt = now,
-                    isAllDayEvent = false,
-                    endAt = now.plusSeconds(3600),
-                    priority = null,
-                    transparency = null,
-                    recurrenceRule = null,
-                    status = null,
-                    rawIcs = ""
-                )
-            )
-    }
-
-    private suspend fun insertAlarm(
-        eventUid: String,
-        description: String,
-        interval: Duration? = null,
-        repeat: Int? = null
-    ): Long = database.alarmComponentDao()
-        .insert(
-            AlarmComponent(
-                id = null,
-                refUid = eventUid,
-                action = Action.DISPLAY,
-                description = description,
-                triggerType = TriggerType.ABSOLUTE,
-                triggerRelativeTo = null,
-                triggerOffset = null,
-                triggerAt = now,
-                summary = null,
-                interval = interval,
-                repeat = repeat,
-                rawIcs = ""
-            )
+        database.insertEventComponent("event")
+        val alarmId = database.insertAlarmComponent(
+            "event",
+            description = "repeat",
+            interval = Duration.ofMinutes(5),
+            repeat = 2
         )
-        .single()
+        database.insertAlarmInstance(alarmId, id = 101, triggerAt = TestInstant)
 
-    private suspend fun insertInstance(alarmId: Long, triggerAt: Instant, desiredState: DesiredState) {
-        database.alarmInstanceDao()
-            .insert(
-                AlarmInstance(
-                    id = null,
-                    alarmComponentId = alarmId,
-                    triggerAt = triggerAt,
-                    desiredState = desiredState,
-                    lastReconcileResult = ReconcileResult.SCHEDULED
+        repository.processDueAlarmOccurrence(101)
+
+        assertTrue(repository.getDueAlarmOccurrenceIdsAndActions(TestInstant).isEmpty())
+        val instances = database.queryAlarmInstanceSnapshots()
+        assertEquals(2, instances.size)
+        assertEquals(DesiredState.INACTIVE, instances.first { it.id == 101L }.desiredState)
+        assertEquals(TestInstant.plus(Duration.ofMinutes(5)), instances.last().triggerAt)
+        assertEquals(DesiredState.ACTIVE, instances.last().desiredState)
+        assertEquals(ReconcileResult.CANCELLED, instances.last().lastReconcileResult)
+    }
+
+    @Test
+    fun processDueOccurrence_repeatingAlarmStopsAtRepeatLimit() = runTest {
+        database.insertEventComponent("event")
+        val alarmId = database.insertAlarmComponent(
+            "event",
+            description = "repeat",
+            interval = Duration.ofMinutes(5),
+            repeat = 2
+        )
+        database.insertAlarmInstance(
+            alarmId,
+            id = 101,
+            triggerAt = TestInstant,
+            desiredState = DesiredState.INACTIVE
+        )
+        database.insertAlarmInstance(
+            alarmId,
+            id = 102,
+            triggerAt = TestInstant.plus(Duration.ofMinutes(5)),
+            desiredState = DesiredState.INACTIVE
+        )
+        database.insertAlarmInstance(
+            alarmId,
+            id = 103,
+            triggerAt = TestInstant.plus(Duration.ofMinutes(10))
+        )
+
+        repository.processDueAlarmOccurrence(103)
+
+        val instances = database.queryAlarmInstanceSnapshots()
+        assertEquals(3, instances.size)
+        assertTrue(instances.all { it.desiredState == DesiredState.INACTIVE })
+    }
+
+    @Test
+    fun getAlarmOccurrenceNeedingReconciliation_splitsCancelAndScheduleQueues() = runTest {
+        database.insertEventComponent("event")
+        val alarm = database.insertAlarmComponent("event")
+        database.insertAlarmInstance(
+            alarm,
+            id = 101,
+            desiredState = DesiredState.INACTIVE,
+            lastReconcileResult = ReconcileResult.SCHEDULED
+        )
+        database.insertAlarmInstance(
+            alarm,
+            id = 102,
+            desiredState = DesiredState.INACTIVE,
+            lastReconcileResult = ReconcileResult.CANCELLED
+        )
+        database.insertAlarmInstance(
+            alarm,
+            id = 103,
+            desiredState = DesiredState.ACTIVE,
+            lastReconcileResult = ReconcileResult.CANCELLED
+        )
+        database.insertAlarmInstance(
+            alarm,
+            id = 104,
+            desiredState = DesiredState.ACTIVE,
+            lastReconcileResult = ReconcileResult.SCHEDULED
+        )
+
+        val (toCancel, toSchedule) = repository.getAlarmOccurrenceNeedingReconciliation()
+
+        assertEquals(listOf(101L), toCancel.map { it.id })
+        assertEquals(listOf(103L), toSchedule.map { it.id })
+    }
+
+    @Test
+    fun markAlarmOccurrenceAsCancelledScheduledUnknown_updatesOnlyTargetOccurrence() = runTest {
+        database.insertEventComponent("event")
+        val alarm = database.insertAlarmComponent("event")
+        database.insertAlarmInstance(alarm, id = 101, lastReconcileResult = ReconcileResult.SCHEDULED)
+        database.insertAlarmInstance(alarm, id = 102, lastReconcileResult = ReconcileResult.SCHEDULED)
+
+        repository.markAlarmOccurrenceAsUnknown(101)
+        repository.markAlarmOccurrenceAsCancelled(102)
+        repository.markAlarmOccurrenceAsScheduled(101)
+
+        val instances = database.queryAlarmInstanceSnapshots().associateBy { it.id }
+        assertEquals(ReconcileResult.SCHEDULED, instances.getValue(101).lastReconcileResult)
+        assertEquals(ReconcileResult.CANCELLED, instances.getValue(102).lastReconcileResult)
+    }
+
+    @Test
+    fun markAllAlarmOccurrencesAsCancelled_updatesEveryOccurrence() = runTest {
+        database.insertEventComponent("event")
+        val alarm = database.insertAlarmComponent("event")
+        database.insertAlarmInstance(alarm, id = 101, lastReconcileResult = ReconcileResult.SCHEDULED)
+        database.insertAlarmInstance(alarm, id = 102, lastReconcileResult = ReconcileResult.UNKNOWN)
+
+        repository.markAllAlarmOccurrencesAsCancelled()
+
+        assertTrue(
+            database.queryAlarmInstanceSnapshots()
+                .all { it.lastReconcileResult == ReconcileResult.CANCELLED }
+        )
+    }
+
+    @Test
+    fun processDueOccurrence_onUnlinkedOccurrenceOnlyMarksInactive() = runTest {
+        database.insertAlarmInstance(
+            alarmId = null,
+            id = 101,
+            desiredState = DesiredState.ACTIVE,
+            lastReconcileResult = ReconcileResult.SCHEDULED
+        )
+
+        repository.processDueAlarmOccurrence(101)
+
+        assertEquals(
+            listOf(
+                AlarmInstanceSnapshot(
+                    id = 101,
+                    alarmComponentId = null,
+                    triggerAt = TestInstant,
+                    desiredState = DesiredState.INACTIVE,
+                    lastReconcileResult = ReconcileResult.CANCELLED
                 )
-            )
+            ),
+            database.queryAlarmInstanceSnapshots()
+        )
     }
 }
