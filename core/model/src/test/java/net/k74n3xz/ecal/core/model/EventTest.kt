@@ -1,31 +1,37 @@
 package net.k74n3xz.ecal.core.model
 
+import java.time.Duration
 import java.time.Instant
-import net.k74n3xz.ecal.core.model.enumeration.alarm.TriggerRelationship
-import net.k74n3xz.ecal.core.model.enumeration.event.EventStatus
-import net.k74n3xz.ecal.core.model.enumeration.event.TimeTransparency
+import net.k74n3xz.ecal.core.model.property.alarm.Action
+import net.k74n3xz.ecal.core.model.property.alarm.Trigger
+import net.k74n3xz.ecal.core.model.property.alarm.TriggerRelationship
+import net.k74n3xz.ecal.core.model.property.event.EventStatus
+import net.k74n3xz.ecal.core.model.property.event.EventTiming
+import net.k74n3xz.ecal.core.model.property.event.TimeTransparency
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Test
 
 class EventTest {
+    private val defaultSchedule = EventTiming.Timed.InstantTiming(Instant.parse("2026-07-09T03:00:00Z"))
+
     @Test
     fun event_acceptsPriorityBounds() {
-        assertEquals(0, Event(uid = "lower-bound", priority = 0).priority)
-        assertEquals(9, Event(uid = "upper-bound", priority = 9).priority)
+        assertEquals(0, Event(uid = "lower-bound", schedule = defaultSchedule, priority = 0).priority)
+        assertEquals(9, Event(uid = "upper-bound", schedule = defaultSchedule, priority = 9).priority)
     }
 
     @Test
     fun event_acceptsUnspecifiedPriority() {
-        assertNull(Event(uid = "unspecified-priority", priority = null).priority)
+        assertNull(Event(uid = "unspecified-priority", schedule = defaultSchedule).priority)
     }
 
     @Test
     fun event_rejectsPriorityOutsideBounds() {
         listOf(-1, 10).forEach { priority ->
             val error = assertThrows(IllegalArgumentException::class.java) {
-                Event(uid = "invalid-priority", priority = priority)
+                Event(uid = "invalid-priority", schedule = defaultSchedule, priority = priority)
             }
 
             assertEquals("The priority must be specified in the range 0 to 9.", error.message)
@@ -34,7 +40,7 @@ class EventTest {
 
     @Test
     fun event_copyRejectsPriorityOutsideBounds() {
-        val event = Event(uid = "event", priority = 1)
+        val event = Event(uid = "event", schedule = defaultSchedule, priority = 1)
 
         val error = assertThrows(IllegalArgumentException::class.java) {
             @Suppress("UnusedDataClassCopyResult")
@@ -48,15 +54,17 @@ class EventTest {
     fun event_preservesExplicitFields() {
         val createdAt = Instant.parse("2026-07-09T01:00:00Z")
         val updatedAt = Instant.parse("2026-07-09T02:00:00Z")
-        val startAt = Instant.parse("2026-07-09T03:00:00Z")
-        val endAt = Instant.parse("2026-07-09T04:00:00Z")
+        val schedule = EventTiming.Timed.RangeTiming(
+            startAt = Instant.parse("2026-07-09T03:00:00Z"),
+            endAt = Instant.parse("2026-07-09T04:00:00Z")
+        )
         val alarms = listOf(
             Alarm(
                 id = 7L,
-                action = Alarm.Action.Display("Leave now"),
-                trigger = Alarm.Trigger.RelativeTrigger(
+                action = Action.Display("Leave now"),
+                trigger = Trigger.RelativeTrigger(
                     relativeTo = TriggerRelationship.END,
-                    offset = java.time.Duration.ofMinutes(-5)
+                    offset = Duration.ofMinutes(-5)
                 )
             )
         )
@@ -68,9 +76,7 @@ class EventTest {
             summary = "Summary",
             description = "Description",
             location = "Location",
-            startAt = startAt,
-            isAllDayEvent = true,
-            endAt = endAt,
+            schedule = schedule,
             priority = 5,
             transparency = TimeTransparency.TRANSPARENT,
             recurrenceRule = "FREQ=DAILY",
@@ -84,9 +90,7 @@ class EventTest {
         assertEquals("Summary", event.summary)
         assertEquals("Description", event.description)
         assertEquals("Location", event.location)
-        assertEquals(startAt, event.startAt)
-        assertEquals(true, event.isAllDayEvent)
-        assertEquals(endAt, event.endAt)
+        assertEquals(schedule, event.schedule)
         assertEquals(5, event.priority)
         assertEquals(TimeTransparency.TRANSPARENT, event.transparency)
         assertEquals("FREQ=DAILY", event.recurrenceRule)

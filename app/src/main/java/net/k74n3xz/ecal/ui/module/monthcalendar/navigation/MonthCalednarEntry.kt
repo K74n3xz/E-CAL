@@ -12,12 +12,15 @@ import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import net.k74n3xz.ecal.core.model.Event
 import net.k74n3xz.ecal.ui.module.monthcalendar.component.scaffold.AddEventFabComponent
+import net.k74n3xz.ecal.ui.module.monthcalendar.component.scaffold.MonthCalendarTopBarComponent
 import net.k74n3xz.ecal.ui.module.monthcalendar.screen.MonthCalendarScreen
 import net.k74n3xz.ecal.ui.module.monthcalendar.viewmodel.MonthCalenderViewModel
 
 fun EntryProviderScope<NavKey>.registerMonthCalendarEntry(
     navigateToAddEvent: () -> Unit,
-    navigateToEditEvent: (Event) -> Unit
+    navigateToEditEvent: (Event) -> Unit,
+    navigateToManageAttachment: () -> Unit,
+    navigateToManageAttendee: () -> Unit
 ) {
     entry<MonthCalendarNavKey> {
         val viewModel: MonthCalenderViewModel = hiltViewModel()
@@ -28,6 +31,12 @@ fun EntryProviderScope<NavKey>.registerMonthCalendarEntry(
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
+            topBar = {
+                MonthCalendarTopBarComponent(
+                    onManageAttachments = navigateToManageAttachment,
+                    onManageAttendees = navigateToManageAttendee
+                )
+            },
             floatingActionButton = { AddEventFabComponent(navigateToAddEvent) },
             floatingActionButtonPosition = FabPosition.End
         ) { innerPadding ->

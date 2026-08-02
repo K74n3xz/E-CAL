@@ -1,8 +1,9 @@
 package net.k74n3xz.ecal.core.model
 
 import java.time.Instant
-import net.k74n3xz.ecal.core.model.enumeration.event.EventStatus
-import net.k74n3xz.ecal.core.model.enumeration.event.TimeTransparency
+import net.k74n3xz.ecal.core.model.property.event.EventStatus
+import net.k74n3xz.ecal.core.model.property.event.EventTiming
+import net.k74n3xz.ecal.core.model.property.event.TimeTransparency
 import org.jetbrains.annotations.Range
 
 data class Event(
@@ -12,9 +13,7 @@ data class Event(
     val summary: String? = null,
     val description: String? = null,
     val location: String? = null,
-    val startAt: Instant = Instant.now(),
-    val isAllDayEvent: Boolean = false,
-    val endAt: Instant? = null,
+    val schedule: EventTiming,
     val priority:
     @Range(from = 0, to = 9)
     Int? = null,
@@ -24,6 +23,8 @@ data class Event(
     val alarms: List<Alarm> = emptyList()
 ) {
     init {
-        require(priority == null || priority in 0..9) { "The priority must be specified in the range 0 to 9." }
+        require(priority == null || priority in 0..9) {
+            "The priority must be specified in the range 0 to 9."
+        }
     }
 }

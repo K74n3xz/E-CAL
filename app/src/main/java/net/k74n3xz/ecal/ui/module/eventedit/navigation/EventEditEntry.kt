@@ -25,21 +25,17 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
-import java.time.Instant
 import net.k74n3xz.ecal.R
-import net.k74n3xz.ecal.core.model.Event
 import net.k74n3xz.ecal.ui.module.eventedit.component.DeletionConfirmationDialog
 import net.k74n3xz.ecal.ui.module.eventedit.component.scaffold.EventEditScreenTopBarComponent
 import net.k74n3xz.ecal.ui.module.eventedit.screen.ColorOverlay
 import net.k74n3xz.ecal.ui.module.eventedit.screen.EventEditScreen
-import net.k74n3xz.ecal.ui.module.eventedit.screen.LoadingScreen
+import net.k74n3xz.ecal.ui.module.eventedit.screen.TextScreen
 import net.k74n3xz.ecal.ui.module.eventedit.viewmodel.EventEditViewModel
-import net.k74n3xz.ecal.ui.module.eventedit.viewmodel.state.EditMode
-import net.k74n3xz.ecal.ui.module.eventedit.viewmodel.state.EditOperationState
+import net.k74n3xz.ecal.ui.module.eventedit.viewmodel.state.EventEditOperationState
 import net.k74n3xz.ecal.ui.root.navigation.NavHostAction
-import net.k74n3xz.ecal.utils.generateEventUid
 
-const val TAG: String = "EventEditEntry"
+private const val TAG: String = "EventEditEntry"
 
 fun EntryProviderScope<NavKey>.registerEventEditEntry(
     registerNavHostAction: @Composable (NavKey, NavHostAction) -> Unit,
@@ -50,10 +46,15 @@ fun EntryProviderScope<NavKey>.registerEventEditEntry(
 
         val viewModel: EventEditViewModel = hiltViewModel()
         val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+        val alarmForms by viewModel.alarmForms.collectAsStateWithLifecycle()
+        val audioAttachments by viewModel.audioAttachments.collectAsStateWithLifecycle()
+        val attendees by viewModel.attendees.collectAsStateWithLifecycle()
+        val attachments by viewModel.attachments.collectAsStateWithLifecycle()
 
-        val isBusy = uiState.operationState is EditOperationState.Initializing ||
-            uiState.operationState is EditOperationState.Saving ||
-            uiState.operationState is EditOperationState.Deleting
+        val uiStateSnapshot = uiState
+
+        val isBusyWithOperation = uiStateSnapshot.operationState is EventEditOperationState.Saving ||
+            uiStateSnapshot.operationState is EventEditOperationState.Deleting
 
         var isConfirmingDeletion by rememberSaveable { mutableStateOf(false) }
         val snackbarHostState = remember { SnackbarHostState() }
@@ -62,100 +63,110 @@ fun EntryProviderScope<NavKey>.registerEventEditEntry(
             it,
             object : NavHostAction {
                 override fun requestBack() {
-                    viewModel.requestBack()
+                    viewModel.requestExit()
                 }
             }
         )
 
         LaunchedEffect(Unit) {
-            if (it.eventUid == null) {
-                viewModel.switchToAddMode()
-            } else {
-                viewModel.switchToEditMode(it.eventUid)
-            }
+            viewModel.initialize(it.eventUid)
         }
 
-        LaunchedEffect(uiState.operationState) {
-            uiState.operationState.let { operationState ->
-                if (operationState is EditOperationState.Success) {
-                    if (viewModel.consumeOperationSuccess()) {
-                        backToParent()
-                    }
-                } else if (operationState is EditOperationState.Failed) {
-                    Log.e(TAG, "registerEventEditEntry: Operation failed.", operationState.cause)
-                    snackbarHostState.currentSnackbarData?.dismiss()
-                    snackbarHostState.showSnackbar(
-                        // TODO: Map each operation failure to a specific, localized user-facing message.
-                        message = operationFailedMessage,
-                        actionLabel = null,
-                        withDismissAction = true,
-                        duration = SnackbarDuration.Indefinite
-                    )
+        LaunchedEffect(uiStateSnapshot.operationState) {
+            if (uiStateSnapshot.operationState is EventEditOperationState.InitializationState.InitializationFailed) {
+                Log.e(TAG, "registerEventEditEntry: Initialization failed.", uiStateSnapshot.operationState.cause)
+                snackbarHostState.currentSnackbarData?.dismiss()
+                snackbarHostState.showSnackbar(
+                    // TODO: Map each operation failure to a specific, localized user-facing message.
+                    message = operationFailedMessage,
+                    actionLabel = null,
+                    withDismissAction = true,
+                    duration = SnackbarDuration.Indefinite
+                )
+            } else if (uiStateSnapshot.operationState is EventEditOperationState.Idle &&
+                uiStateSnapshot.operationState.failure != null
+            ) {
+                Log.e(TAG, "registerEventEditEntry: Operation failed.", uiStateSnapshot.operationState.failure)
+                snackbarHostState.currentSnackbarData?.dismiss()
+                snackbarHostState.showSnackbar(
+                    // TODO: Map each operation failure to a specific, localized user-facing message.
+                    message = operationFailedMessage,
+                    actionLabel = null,
+                    withDismissAction = true,
+                    duration = SnackbarDuration.Indefinite
+                )
+            } else if (uiStateSnapshot.operationState is EventEditOperationState.Exit) {
+                if (viewModel.consumeExitState()) {
+                    backToParent()
                 }
             }
         }
 
-        uiState.let { state ->
-            Scaffold(
-                modifier = Modifier.fillMaxSize(),
-                topBar = {
-                    EventEditScreenTopBarComponent(
-                        titleText = when (state.editMode) {
-                            is EditMode.AddEventMode -> stringResource(R.string.topbar_title_text_new_event)
-                            is EditMode.EditEventMode -> stringResource(R.string.topbar_title_text_edit_event)
-                            null -> ""
-                        },
-                        // TODO: Ask the user to confirm before discarding unsaved changes.
-                        onBack = viewModel::requestBack,
-                        canDelete = state.editMode is EditMode.EditEventMode,
-                        onDelete = {
-                            if (!isBusy) {
-                                isConfirmingDeletion = true
-                            }
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            topBar = {
+                EventEditScreenTopBarComponent(
+                    titleText = if (uiStateSnapshot.operationState is EventEditOperationState.InitializationState) {
+                        ""
+                    } else if (it.eventUid == null) {
+                        stringResource(R.string.topbar_title_text_new_event)
+                    } else {
+                        stringResource(R.string.topbar_title_text_edit_event)
+                    },
+                    // TODO: Ask the user to confirm before discarding unsaved changes.
+                    onBack = viewModel::requestExit,
+                    canDelete = uiStateSnapshot.operationState !is EventEditOperationState.InitializationState &&
+                        it.eventUid != null,
+                    onDelete = {
+                        if (uiStateSnapshot.operationState !is EventEditOperationState.InitializationState) {
+                            isConfirmingDeletion = true
                         }
-                    )
-                },
-                snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
-            ) { innerPadding ->
-                Column(
-                    modifier = Modifier.padding(innerPadding),
-                    verticalArrangement = Arrangement.Top,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    if (isBusy) {
-                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                    }
+                )
+            },
+            snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+        ) { innerPadding ->
+            Column(
+                modifier = Modifier.padding(innerPadding),
+                verticalArrangement = Arrangement.Top,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                if (isBusyWithOperation) {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                }
+
+                when (uiStateSnapshot.operationState) {
+                    is EventEditOperationState.InitializationState.Uninitialized,
+                    is EventEditOperationState.InitializationState.Initializing -> {
+                        TextScreen(
+                            text = stringResource(R.string.text_loading),
+                            modifier = Modifier.fillMaxSize()
+                        )
                     }
 
-                    if (state.editMode == null) {
-                        LoadingScreen(modifier = Modifier.fillMaxSize())
-                    } else {
-                        ColorOverlay(enabled = isBusy) {
-                            EventEditScreen(
-                                event = when (state.editMode) {
-                                    is EditMode.AddEventMode -> Event(generateEventUid())
-                                    is EditMode.EditEventMode -> state.editMode.event
-                                },
-                                onCancel = viewModel::requestBack,
-                                onSave = { newEvent ->
-                                    var e = newEvent
-                                    // TODO: Move event validation into a shared validator and show errors instead of coercing endAt.
-                                    val startAt = newEvent.startAt
-                                    val endAt = newEvent.endAt
-                                    if (endAt != null && endAt.isBefore(startAt)) {
-                                        e = e.copy(endAt = startAt)
-                                    }
+                    is EventEditOperationState.InitializationState.InitializationFailed -> {
+                        TextScreen(
+                            text = stringResource(R.string.error_event_loading_failed),
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
 
-                                    val updatedAt = Instant.now()
-                                    e = if (it.eventUid == null) {
-                                        e.copy(
-                                            createdAt = updatedAt,
-                                            updatedAt = updatedAt
-                                        )
-                                    } else {
-                                        e.copy(updatedAt = updatedAt)
-                                    }
-                                    viewModel.saveEvent(e)
-                                },
+                    is EventEditOperationState.Idle,
+                    is EventEditOperationState.Saving,
+                    is EventEditOperationState.Deleting -> {
+                        ColorOverlay(enabled = isBusyWithOperation) {
+                            EventEditScreen(
+                                eventForm = viewModel.eventForm,
+                                alarmForms = alarmForms,
+                                audioAttachments = audioAttachments,
+                                attendees = attendees,
+                                attachments = attachments,
+                                onAddAlarm = viewModel::addAlarm,
+                                onRemoveAlarm = viewModel::removeAlarm,
+                                onCancel = viewModel::requestExit,
+                                canSave =
+                                    viewModel.eventForm.isValid && alarmForms.all { alarmForm -> alarmForm.isValid },
+                                onSave = viewModel::saveEvent,
                                 modifier = Modifier.fillMaxSize()
                             )
 
@@ -164,13 +175,21 @@ fun EntryProviderScope<NavKey>.registerEventEditEntry(
                                     onDismiss = { isConfirmingDeletion = false },
                                     onConfirm = {
                                         isConfirmingDeletion = false
-                                        if (state.editMode is EditMode.EditEventMode) {
-                                            viewModel.deleteEvent(state.editMode.event)
+                                        if (it.eventUid != null) {
+                                            viewModel.deleteEvent()
                                         }
                                     }
                                 )
                             }
                         }
+                    }
+
+                    is EventEditOperationState.Exit,
+                    is EventEditOperationState.Exited -> {
+                        TextScreen(
+                            text = "",
+                            modifier = Modifier.fillMaxSize()
+                        )
                     }
                 }
             }

@@ -22,12 +22,14 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner = "net.k74n3xz.ecal.HiltTestRunner"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -42,6 +44,12 @@ android {
     buildFeatures {
         compose = true
     }
+
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+        }
+    }
 }
 
 kotlin {
@@ -52,7 +60,7 @@ kotlin {
 
 dependencies {
     implementation(project(":core:model"))
-    implementation(project(":core:database"))
+    implementation(project(":core:data"))
     implementation(project(":core:preference"))
     implementation(project(":core:application"))
     implementation(libs.androidx.core.ktx)
@@ -74,19 +82,24 @@ dependencies {
     implementation(libs.androidx.work.runtime)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt)
+    ksp(libs.hilt.androidx.compiler)
     implementation(libs.hilt.navigation.compose)
     implementation(libs.hilt.work)
     implementation(libs.kizitonwose.calendar)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
     testImplementation(libs.junit)
+    testImplementation(libs.androidx.junit.ktx)
+    testImplementation(libs.robolectric)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.compose.ui.test.junit4)
+    kspTest(libs.hilt.compiler)
+    testImplementation(libs.hilt.android.testing)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    kspAndroidTest(libs.hilt.compiler)
-    androidTestImplementation(libs.hilt.android.testing)
     androidTestImplementation(libs.androidx.work.test)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)

@@ -13,23 +13,26 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.toMutableStateList
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -43,25 +46,48 @@ import androidx.compose.ui.unit.dp
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
-import java.time.ZonedDateTime
 import net.k74n3xz.ecal.R
 import net.k74n3xz.ecal.core.model.Alarm
+import net.k74n3xz.ecal.core.model.Attachment
+import net.k74n3xz.ecal.core.model.Attendee
 import net.k74n3xz.ecal.core.model.Event
-import net.k74n3xz.ecal.core.model.enumeration.alarm.TriggerRelationship
-import net.k74n3xz.ecal.core.model.enumeration.event.EventStatus
-import net.k74n3xz.ecal.core.model.enumeration.event.TimeTransparency
+import net.k74n3xz.ecal.core.model.property.alarm.Action
+import net.k74n3xz.ecal.core.model.property.alarm.Trigger
+import net.k74n3xz.ecal.core.model.property.alarm.TriggerRelationship
+import net.k74n3xz.ecal.core.model.property.event.EventStatus
+import net.k74n3xz.ecal.core.model.property.event.EventTiming
+import net.k74n3xz.ecal.core.model.property.event.TimeTransparency
 import net.k74n3xz.ecal.ui.compositionlocal.LocalTimeZone
 import net.k74n3xz.ecal.ui.module.eventedit.component.AlarmCardEditComponent
 import net.k74n3xz.ecal.ui.module.eventedit.component.ComboBoxComponent
 import net.k74n3xz.ecal.ui.module.eventedit.component.DateFieldComponent
+import net.k74n3xz.ecal.ui.module.eventedit.component.DurationFieldComponent
 import net.k74n3xz.ecal.ui.module.eventedit.component.EventTextFieldComponent
+import net.k74n3xz.ecal.ui.module.eventedit.component.PeriodFieldComponent
 import net.k74n3xz.ecal.ui.module.eventedit.component.TimeFieldComponent
-import net.k74n3xz.ecal.utils.atEndOfDay
-import net.k74n3xz.ecal.utils.generateEventUid
+import net.k74n3xz.ecal.ui.presentation.form.AlarmForm
+import net.k74n3xz.ecal.ui.presentation.form.EventForm
+import net.k74n3xz.ecal.ui.presentation.form.enumeration.event.TimingMode
+import net.k74n3xz.ecal.ui.presentation.form.error.DateTimeFieldError
+import net.k74n3xz.ecal.ui.presentation.form.utils.toAlarmForm
+import net.k74n3xz.ecal.ui.presentation.form.utils.toEventForm
+import net.k74n3xz.ecal.ui.utils.generateEventUid
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EventEditScreen(event: Event, onCancel: () -> Unit, onSave: (Event) -> Unit, modifier: Modifier = Modifier) {
+internal fun EventEditScreen(
+    eventForm: EventForm,
+    alarmForms: List<AlarmForm>,
+    audioAttachments: List<Attachment>,
+    attendees: List<Attendee>,
+    attachments: List<Attachment>,
+    onAddAlarm: () -> Unit,
+    onRemoveAlarm: (Int) -> Unit,
+    onCancel: () -> Unit,
+    canSave: Boolean,
+    onSave: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Column(
         modifier = modifier
             .padding(16.dp)
@@ -70,66 +96,15 @@ fun EventEditScreen(event: Event, onCancel: () -> Unit, onSave: (Event) -> Unit,
         verticalArrangement = Arrangement.SpaceBetween,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        val timeZone = LocalTimeZone.current
-
-        // Summary
-        val summaryFieldState = rememberTextFieldState(event.summary ?: "")
-        var isSummaryFieldClear by rememberSaveable { mutableStateOf(event.summary == null) }
-
-        // Description
-        val descriptionFieldState = rememberTextFieldState(event.description ?: "")
-        var isDescriptionFieldClear by rememberSaveable { mutableStateOf(event.description == null) }
-
-        // Location
-        val locationFieldState = rememberTextFieldState(event.location ?: "")
-        var isLocationFieldClear by rememberSaveable { mutableStateOf(event.location == null) }
-
-        // Time
-        var hasEndAt by rememberSaveable { mutableStateOf(event.endAt != null) }
-        var isAllDayEvent by rememberSaveable { mutableStateOf(event.isAllDayEvent) }
-
-        // Time - Start At
-        var startDate by rememberSaveable {
-            mutableStateOf(
-                event.startAt.atZone(timeZone).toLocalDate()
-            )
-        }
-        var startTime by rememberSaveable {
-            mutableStateOf(
-                event.startAt.atZone(timeZone).toLocalTime()
-            )
-        }
-
-        // Time - End At
-        var endDate by rememberSaveable {
-            mutableStateOf(
-                event.endAt?.atZone(timeZone)?.toLocalDate()
-            )
-        }
-        var endTime by rememberSaveable {
-            mutableStateOf(
-                event.endAt?.atZone(timeZone)?.toLocalTime()
-            )
-        }
-
-        // Priority
-        var priority by rememberSaveable { mutableStateOf(event.priority) }
-
-        // Time Transparency
-        var timeTransparency by rememberSaveable { mutableStateOf(event.transparency) }
-
-        // recurrenceRule
-
-        // Status
-        var status by rememberSaveable { mutableStateOf(event.status) }
-
-        // Alarms
-        val mutableAlarms = rememberSaveable { event.alarms.toMutableStateList() }
-
         Column(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            val timingModeOptions = listOf(
+                TimingMode.POINT to stringResource(R.string.text_timing_mode_point),
+                TimingMode.RANGE to stringResource(R.string.text_timing_mode_range),
+                TimingMode.DURATION to stringResource(R.string.text_timing_mode_duration)
+            )
             val priorities = mapOf(
                 0 to stringResource(R.string.text_priority_undefined),
                 1 to stringResource(R.string.text_priority_highest),
@@ -159,10 +134,10 @@ fun EventEditScreen(event: Event, onCancel: () -> Unit, onSave: (Event) -> Unit,
 
             // Summary
             EventTextFieldComponent(
-                textFieldState = summaryFieldState,
-                isClear = isSummaryFieldClear,
-                onClear = { isSummaryFieldClear = true },
-                onDirty = { isSummaryFieldClear = false },
+                textFieldState = eventForm.summary,
+                isClear = eventForm.isSummaryClear,
+                onClear = { eventForm.isSummaryClear = true },
+                onDirty = { eventForm.isSummaryClear = false },
                 labelText = stringResource(R.string.text_field_label_summary),
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = defaultKeyboardOptions.copy(
@@ -175,10 +150,10 @@ fun EventEditScreen(event: Event, onCancel: () -> Unit, onSave: (Event) -> Unit,
 
             // Description
             EventTextFieldComponent(
-                textFieldState = descriptionFieldState,
-                isClear = isDescriptionFieldClear,
-                onClear = { isDescriptionFieldClear = true },
-                onDirty = { isDescriptionFieldClear = false },
+                textFieldState = eventForm.description,
+                isClear = eventForm.isDescriptionClear,
+                onClear = { eventForm.isDescriptionClear = true },
+                onDirty = { eventForm.isDescriptionClear = false },
                 labelText = stringResource(R.string.text_field_label_description),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -193,10 +168,10 @@ fun EventEditScreen(event: Event, onCancel: () -> Unit, onSave: (Event) -> Unit,
 
             // Location
             EventTextFieldComponent(
-                textFieldState = locationFieldState,
-                isClear = isLocationFieldClear,
-                onClear = { isLocationFieldClear = true },
-                onDirty = { isLocationFieldClear = false },
+                textFieldState = eventForm.location,
+                isClear = eventForm.isLocationClear,
+                onClear = { eventForm.isLocationClear = true },
+                onDirty = { eventForm.isLocationClear = false },
                 labelText = stringResource(R.string.text_field_label_location),
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = defaultKeyboardOptions.copy(
@@ -205,9 +180,32 @@ fun EventEditScreen(event: Event, onCancel: () -> Unit, onSave: (Event) -> Unit,
                 )
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
             // Time:
+            // Time - Mode
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                timingModeOptions.forEachIndexed { index, pair ->
+                    SegmentedButton(
+                        selected = eventForm.timingMode == pair.first,
+                        onClick = { eventForm.timingMode = pair.first },
+                        shape = SegmentedButtonDefaults.itemShape(
+                            index = index,
+                            count = timingModeOptions.size
+                        )
+                    ) {
+                        Text(
+                            text = pair.second,
+                            color = Color.Unspecified,
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             // Time - Start At
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -222,24 +220,28 @@ fun EventEditScreen(event: Event, onCancel: () -> Unit, onSave: (Event) -> Unit,
                     style = MaterialTheme.typography.bodyMedium
                 )
 
-                Row(
+                Column(
                     modifier = Modifier.weight(0.8f),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalAlignment = Alignment.Start
                 ) {
                     DateFieldComponent(
-                        date = startDate,
-                        onPickDate = { startDate = it },
-                        modifier = Modifier.weight(0.62f)
+                        date = eventForm.startDate,
+                        onPickDate = { eventForm.startDate = it },
+                        modifier = Modifier.fillMaxWidth()
                     )
 
-                    // TODO: Animate the start and end time fields when all-day mode changes.
-                    if (!isAllDayEvent) {
-                        TimeFieldComponent(
-                            time = startTime,
-                            onPickTime = { startTime = it },
-                            modifier = Modifier.weight(0.38f)
-                        )
+                    AnimatedVisibility(!eventForm.isAllDay) {
+                        Column(
+                            verticalArrangement = Arrangement.Top,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            TimeFieldComponent(
+                                time = eventForm.startTime,
+                                onPickTime = { eventForm.startTime = it },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
                     }
                 }
             }
@@ -247,42 +249,86 @@ fun EventEditScreen(event: Event, onCancel: () -> Unit, onSave: (Event) -> Unit,
             Spacer(modifier = Modifier.height(8.dp))
 
             // Time - End At
-            AnimatedVisibility(hasEndAt) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+            AnimatedVisibility(eventForm.timingMode == TimingMode.RANGE) {
+                Column(
+                    verticalArrangement = Arrangement.Top,
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        text = stringResource(R.string.datetime_picker_label_end_at),
-                        modifier = Modifier.weight(0.2f),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.Start,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     Row(
-                        modifier = Modifier.weight(0.8f),
+                        modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        if (endDate == null) {
-                            endDate = startDate
-                        }
-                        DateFieldComponent(
-                            date = endDate!!,
-                            onPickDate = { endDate = it },
-                            modifier = Modifier.weight(0.62f)
+                        Text(
+                            text = stringResource(R.string.datetime_picker_label_end_at),
+                            modifier = Modifier.weight(0.2f),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.Start,
+                            style = MaterialTheme.typography.bodyMedium
                         )
 
-                        if (!isAllDayEvent) {
-                            if (endTime == null) {
-                                endTime = startTime.plusMinutes(15)
+                        Column(
+                            modifier = Modifier.weight(0.8f),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            horizontalAlignment = Alignment.Start
+                        ) {
+                            DateFieldComponent(
+                                date = eventForm.endDate,
+                                onPickDate = { eventForm.endDate = it },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            AnimatedVisibility(!eventForm.isAllDay) {
+                                Column(
+                                    verticalArrangement = Arrangement.Top,
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    TimeFieldComponent(
+                                        time = eventForm.endTime,
+                                        onPickTime = { eventForm.endTime = it },
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
                             }
-                            TimeFieldComponent(
-                                time = endTime!!,
-                                onPickTime = { endTime = it },
-                                modifier = Modifier.weight(0.38f)
+                        }
+                    }
+                }
+            }
+
+            // Time - Duration
+            AnimatedVisibility(eventForm.timingMode == TimingMode.DURATION) {
+                Column(
+                    verticalArrangement = Arrangement.Top,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.text_duration_label),
+                            modifier = Modifier.weight(0.2f),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.Start,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+
+                        if (eventForm.isAllDay) {
+                            PeriodFieldComponent(
+                                period = eventForm.period,
+                                onSave = { eventForm.period = it },
+                                modifier = Modifier.weight(0.8f)
+                            )
+                        } else {
+                            DurationFieldComponent(
+                                duration = eventForm.duration,
+                                onSave = { eventForm.duration = it },
+                                modifier = Modifier.weight(0.8f)
                             )
                         }
                     }
@@ -297,46 +343,48 @@ fun EventEditScreen(event: Event, onCancel: () -> Unit, onSave: (Event) -> Unit,
                 horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
+                Text(
+                    text = stringResource(R.string.switch_all_day_description),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
+                Switch(
+                    checked = eventForm.isAllDay,
+                    onCheckedChange = { eventForm.isAllDay = it }
+                )
+            }
+
+            // Time - Error
+            AnimatedVisibility(eventForm.timingFieldError != null) {
+                Column(
+                    verticalArrangement = Arrangement.Top,
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    Spacer(modifier = Modifier.height(8.dp))
+
                     Text(
-                        text = stringResource(R.string.switch_period_description),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                        text = when (eventForm.timingFieldError) {
+                            DateTimeFieldError.TooLongPeriod ->
+                                stringResource(R.string.error_event_duration_too_long)
 
-                    Spacer(modifier = Modifier.width(20.dp))
+                            DateTimeFieldError.EndBeforeStart ->
+                                stringResource(R.string.error_event_end_before_start)
 
-                    Switch(
-                        checked = hasEndAt,
-                        onCheckedChange = { hasEndAt = it }
-                    )
-                }
+                            DateTimeFieldError.EndNotAfterStart ->
+                                stringResource(R.string.error_event_end_not_after_start)
 
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(R.string.switch_all_day_description),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-
-                    Spacer(modifier = Modifier.width(20.dp))
-
-                    Switch(
-                        checked = isAllDayEvent,
-                        onCheckedChange = { isAllDayEvent = it }
+                            null -> ""
+                        },
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Start,
+                        style = MaterialTheme.typography.labelSmall
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            HorizontalDivider(modifier = Modifier.padding(top = 16.dp, bottom = 24.dp))
 
             // Priority
             Row(
@@ -353,12 +401,12 @@ fun EventEditScreen(event: Event, onCancel: () -> Unit, onSave: (Event) -> Unit,
                 )
 
                 ComboBoxComponent(
-                    text = priority?.let { priorities[it] } ?: "",
+                    text = eventForm.priority?.let { priorities[it] } ?: "",
                     items = priorities,
-                    onItemSelect = { priority = it },
+                    onItemSelect = { eventForm.priority = it },
                     modifier = Modifier.weight(0.6f),
-                    canClear = priority != null,
-                    onClear = { priority = null }
+                    canClear = eventForm.priority != null,
+                    onClear = { eventForm.priority = null }
                 )
             }
 
@@ -379,12 +427,12 @@ fun EventEditScreen(event: Event, onCancel: () -> Unit, onSave: (Event) -> Unit,
                 )
 
                 ComboBoxComponent(
-                    text = timeTransparency?.let { timeTransparencyOptions[it] } ?: "",
+                    text = eventForm.timeTransparency?.let { timeTransparencyOptions[it] } ?: "",
                     items = timeTransparencyOptions,
-                    onItemSelect = { timeTransparency = it },
+                    onItemSelect = { eventForm.timeTransparency = it },
                     modifier = Modifier.weight(0.6f),
-                    canClear = timeTransparency != null,
-                    onClear = { timeTransparency = null }
+                    canClear = eventForm.timeTransparency != null,
+                    onClear = { eventForm.timeTransparency = null }
                 )
             }
 
@@ -407,83 +455,47 @@ fun EventEditScreen(event: Event, onCancel: () -> Unit, onSave: (Event) -> Unit,
                 )
 
                 ComboBoxComponent(
-                    text = status?.let { statusOptions[it] } ?: "",
+                    text = eventForm.status?.let { statusOptions[it] } ?: "",
                     items = statusOptions,
-                    onItemSelect = { status = it },
+                    onItemSelect = { eventForm.status = it },
                     modifier = Modifier.weight(0.6f),
-                    canClear = status != null,
-                    onClear = { status = null }
+                    canClear = eventForm.status != null,
+                    onClear = { eventForm.status = null }
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            HorizontalDivider(modifier = Modifier.padding(top = 24.dp, bottom = 16.dp))
+
+            Text(
+                text = stringResource(R.string.text_alarms),
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Start,
+                style = MaterialTheme.typography.bodyMedium
+            )
 
             // Alarms
-            mutableAlarms.forEachIndexed { index, alarm ->
+            alarmForms.forEachIndexed { index, alarm ->
                 // TODO: Animate alarm cards when reminders are added or removed.
                 Spacer(modifier = Modifier.height(16.dp))
 
                 AlarmCardEditComponent(
                     titleText = stringResource(R.string.text_alarm_title_numbered, index + 1),
-                    alarm = alarm,
-                    onModify = { mutableAlarms[index] = it },
-                    onRemove = { mutableAlarms.removeAt(index) }
+                    alarmForm = alarm,
+                    audioAttachments = audioAttachments,
+                    attendees = attendees,
+                    attachments = attachments,
+                    onRemove = { onRemoveAlarm(index) }
                 )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                FilledTonalButton(
-                    onClick = {
-                        mutableAlarms.add(
-                            Alarm(
-                                id = null,
-                                action = Alarm.Action.Display(""),
-                                trigger = Alarm.Trigger.RelativeTrigger(
-                                    relativeTo = TriggerRelationship.START,
-                                    offset = Duration.ofMinutes(-15)
-                                ),
-                                repetition = null
-                            )
-                        )
-                    }
-                ) {
-                    Text(
-                        text = stringResource(R.string.button_text_add_relative_alarm),
-                        color = Color.Unspecified,
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                FilledTonalButton(
-                    onClick = {
-                        mutableAlarms.add(
-                            Alarm(
-                                id = null,
-                                action = Alarm.Action.Display(""),
-                                trigger = Alarm.Trigger.AbsoluteTrigger(
-                                    at = ZonedDateTime.now(timeZone).plusMinutes(15).toInstant()
-                                ),
-                                repetition = null
-                            )
-                        )
-                    }
-                ) {
-                    Text(
-                        text = stringResource(R.string.button_text_add_absolute_alarm),
-                        color = Color.Unspecified,
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
+            IconButton(onClick = onAddAlarm) {
+                Icon(
+                    imageVector = Icons.Outlined.Add,
+                    contentDescription = stringResource(R.string.button_content_description_add_alarm)
+                )
             }
         }
 
@@ -506,49 +518,8 @@ fun EventEditScreen(event: Event, onCancel: () -> Unit, onSave: (Event) -> Unit,
             Spacer(modifier = Modifier.width(16.dp))
 
             Button(
-                onClick = {
-                    val startAt = if (isAllDayEvent) {
-                        startDate.atStartOfDay(timeZone).toInstant()
-                    } else {
-                        ZonedDateTime.of(startDate, startTime, timeZone).toInstant()
-                    }
-                    val endAt = if (hasEndAt) {
-                        if (isAllDayEvent) {
-                            endDate!!.atEndOfDay(timeZone).toInstant()
-                        } else {
-                            ZonedDateTime.of(endDate!!, endTime!!, timeZone).toInstant()
-                        }
-                    } else {
-                        null
-                    }
-
-                    onSave(
-                        event.copy(
-                            summary = if (isSummaryFieldClear) {
-                                null
-                            } else {
-                                summaryFieldState.text.toString()
-                            },
-                            description = if (isDescriptionFieldClear) {
-                                null
-                            } else {
-                                descriptionFieldState.text.toString()
-                            },
-                            location = if (isLocationFieldClear) {
-                                null
-                            } else {
-                                locationFieldState.text.toString()
-                            },
-                            startAt = startAt,
-                            isAllDayEvent = isAllDayEvent,
-                            endAt = endAt,
-                            priority = priority,
-                            transparency = timeTransparency,
-                            status = status,
-                            alarms = mutableAlarms.toList()
-                        )
-                    )
-                }
+                onClick = onSave,
+                enabled = canSave
             ) {
                 Text(
                     text = stringResource(R.string.text_save),
@@ -564,11 +535,38 @@ fun EventEditScreen(event: Event, onCancel: () -> Unit, onSave: (Event) -> Unit,
 @Preview(showBackground = true)
 @Composable
 private fun EventEditScreenPreview1() {
-    CompositionLocalProvider(LocalTimeZone provides ZoneId.systemDefault()) {
+    val timeZone = ZoneId.systemDefault()
+
+    val eventUiModel = remember {
+        Event(
+            uid = generateEventUid(),
+            schedule = EventTiming.Timed.InstantTiming(Instant.now())
+        ).toEventForm(timeZone)
+    }
+    val alarmUiModels = remember { mutableStateListOf<AlarmForm>() }
+
+    CompositionLocalProvider(LocalTimeZone provides timeZone) {
         Surface(modifier = Modifier.fillMaxSize()) {
             EventEditScreen(
-                event = Event(generateEventUid()),
+                eventForm = eventUiModel,
+                alarmForms = alarmUiModels,
+                audioAttachments = emptyList(),
+                attendees = emptyList(),
+                attachments = emptyList(),
+                onAddAlarm = {
+                    alarmUiModels.add(
+                        Alarm(
+                            action = Action.Display(""),
+                            trigger = Trigger.RelativeTrigger(
+                                relativeTo = TriggerRelationship.START,
+                                offset = Duration.ofMinutes(-15)
+                            )
+                        ).toAlarmForm(timeZone)
+                    )
+                },
+                onRemoveAlarm = { alarmUiModels.removeAt(it) },
                 onCancel = {},
+                canSave = eventUiModel.isValid && alarmUiModels.all { it.isValid },
                 onSave = {}
             )
         }
@@ -578,22 +576,220 @@ private fun EventEditScreenPreview1() {
 @Preview(showBackground = true)
 @Composable
 private fun EventEditScreenPreview2() {
-    CompositionLocalProvider(LocalTimeZone provides ZoneId.systemDefault()) {
+    val timeZone = ZoneId.systemDefault()
+
+    val eventUiModel = remember {
+        Event(
+            uid = generateEventUid(),
+            createdAt = Instant.now(),
+            updatedAt = Instant.now(),
+            summary = "Team Standup",
+            description = "Daily sync",
+            location = "Conference Room A",
+            schedule = EventTiming.Timed.RangeTiming(
+                startAt = Instant.now().plusSeconds(3600),
+                endAt = Instant.now().plusSeconds(3600 * 2)
+            ),
+            status = EventStatus.CONFIRMED
+        ).toEventForm(timeZone)
+    }
+    val alarmUiModels = remember {
+        mutableStateListOf(
+            Alarm(
+                action = Action.Display(""),
+                trigger = Trigger.RelativeTrigger(
+                    relativeTo = TriggerRelationship.START,
+                    offset = Duration.ofMinutes(-15)
+                )
+            ).toAlarmForm(timeZone)
+        )
+    }
+
+    CompositionLocalProvider(LocalTimeZone provides timeZone) {
         Surface(modifier = Modifier.fillMaxSize()) {
             EventEditScreen(
-                event = Event(
-                    uid = generateEventUid(),
-                    createdAt = Instant.now(),
-                    updatedAt = Instant.now(),
-                    summary = "Team Standup",
-                    description = "Daily sync",
-                    location = "Conference Room A",
-                    startAt = Instant.now().plusSeconds(3600),
-                    isAllDayEvent = false,
-                    endAt = Instant.now().plusSeconds(3600 * 2),
-                    status = EventStatus.CONFIRMED
+                eventForm = eventUiModel,
+                alarmForms = alarmUiModels,
+                audioAttachments = listOf(
+                    Attachment(
+                        id = 1L,
+                        description = "An MP3 music sample",
+                        name = "summer-melody.mp3",
+                        mimeType = "audio/mpeg",
+                        sizeBytes = 4_826_112L
+                    ),
+                    Attachment(
+                        id = 2L,
+                        description = "A high-quality WAV recording",
+                        name = "studio-recording.wav",
+                        mimeType = "audio/wav",
+                        sizeBytes = 18_345_984L
+                    ),
+                    Attachment(
+                        id = 3L,
+                        description = "An Ogg Vorbis audio sample",
+                        name = "forest-ambience.ogg",
+                        mimeType = "audio/ogg",
+                        sizeBytes = 6_291_456L
+                    ),
+                    Attachment(
+                        id = 4L,
+                        description = "A lossless FLAC music track",
+                        name = "piano-performance.flac",
+                        mimeType = "audio/flac",
+                        sizeBytes = 24_117_248L
+                    ),
+                    Attachment(
+                        id = 5L,
+                        description = "An AAC podcast episode",
+                        name = "technology-podcast.aac",
+                        mimeType = "audio/aac",
+                        sizeBytes = 9_437_184L
+                    ),
+                    Attachment(
+                        id = 6L,
+                        description = "An audio file stored in an MP4 container",
+                        name = "interview-audio.m4a",
+                        mimeType = "audio/mp4",
+                        sizeBytes = 7_864_320L
+                    ),
+                    Attachment(
+                        id = 7L,
+                        description = "A WebM voice recording",
+                        name = "voice-message.webm",
+                        mimeType = "audio/webm",
+                        sizeBytes = 1_572_864L
+                    ),
+                    Attachment(
+                        id = 8L,
+                        description = "A MIDI instrumental sequence",
+                        name = "digital-composition.mid",
+                        mimeType = "audio/midi",
+                        sizeBytes = 84_992L
+                    ),
+                    Attachment(
+                        id = 9L,
+                        description = "An Opus speech sample",
+                        name = "conference-speech.opus",
+                        mimeType = "audio/opus",
+                        sizeBytes = 2_359_296L
+                    )
                 ),
+                attendees = listOf(
+                    Attendee(
+                        id = 1L,
+                        name = "Alice Johnson",
+                        description = "Product manager responsible for the mobile application.",
+                        email = "alice.johnson@example.com"
+                    ),
+                    Attendee(
+                        id = 2L,
+                        name = "Brian Smith",
+                        description = "Backend engineer specializing in Kotlin and Spring Boot.",
+                        email = "brian.smith@example.com"
+                    ),
+                    Attendee(
+                        id = 3L,
+                        name = "Catherine Lee",
+                        description = "UI designer focused on accessible user experiences.",
+                        email = "catherine.lee@example.com"
+                    ),
+                    Attendee(
+                        id = 4L,
+                        name = "Daniel Brown",
+                        description = "Data analyst presenting the quarterly performance report.",
+                        email = "daniel.brown@example.com"
+                    ),
+                    Attendee(
+                        id = 5L,
+                        name = "Emma Wilson",
+                        description = "Guest speaker discussing modern software architecture.",
+                        email = "emma.wilson@example.com"
+                    ),
+                    Attendee(
+                        id = 6L,
+                        name = "Frank Miller",
+                        description = null,
+                        email = "frank.miller@example.com"
+                    ),
+                    Attendee(
+                        id = 7L,
+                        name = null,
+                        description = "An attendee who chose not to provide a display name.",
+                        email = "anonymous.attendee@example.com"
+                    ),
+                    Attendee(
+                        id = 8L,
+                        name = "Grace Taylor",
+                        description = "New attendee whose registration is still being processed.",
+                        email = "grace.taylor@example.com"
+                    )
+                ),
+                attachments = listOf(
+                    Attachment(
+                        id = 1L,
+                        description = "Quarterly financial report for the management team.",
+                        name = "financial_report_q2.pdf",
+                        mimeType = "application/pdf",
+                        sizeBytes = 2_458_624L
+                    ),
+                    Attachment(
+                        id = 2L,
+                        description = "Profile photo uploaded by the user.",
+                        name = "profile_photo.jpg",
+                        mimeType = "image/jpeg",
+                        sizeBytes = 845_312L
+                    ),
+                    Attachment(
+                        id = 3L,
+                        description = "Product demonstration video.",
+                        name = "product_demo.mp4",
+                        mimeType = "video/mp4",
+                        sizeBytes = 18_742_560L
+                    ),
+                    Attachment(
+                        id = 4L,
+                        description = "Customer contact information exported as a spreadsheet.",
+                        name = "customer_contacts.xlsx",
+                        mimeType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        sizeBytes = 326_144L
+                    ),
+                    Attachment(
+                        id = 5L,
+                        description = "Meeting notes recorded during the project review.",
+                        name = "project_review_notes.txt",
+                        mimeType = "text/plain",
+                        sizeBytes = 12_480L
+                    ),
+                    Attachment(
+                        id = 6L,
+                        description = null,
+                        name = "archive.zip",
+                        mimeType = "application/zip",
+                        sizeBytes = 9_830_400L
+                    ),
+                    Attachment(
+                        id = 7L,
+                        description = "A newly selected file that has not been uploaded yet.",
+                        name = "draft_proposal.docx",
+                        mimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        sizeBytes = 1_204_736L
+                    )
+                ),
+                onAddAlarm = {
+                    alarmUiModels.add(
+                        Alarm(
+                            action = Action.Display(""),
+                            trigger = Trigger.RelativeTrigger(
+                                relativeTo = TriggerRelationship.START,
+                                offset = Duration.ofMinutes(-15)
+                            )
+                        ).toAlarmForm(timeZone)
+                    )
+                },
+                onRemoveAlarm = { alarmUiModels.removeAt(it) },
                 onCancel = {},
+                canSave = eventUiModel.isValid && alarmUiModels.all { it.isValid },
                 onSave = {}
             )
         }

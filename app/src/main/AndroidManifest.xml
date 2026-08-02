@@ -5,12 +5,13 @@
     <uses-permission
         android:name="android.permission.FOREGROUND_SERVICE"
         tools:ignore="ForegroundServicesPolicy" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
     <application
-        android:name=".android.components.ECalApplication"
+        android:name=".platform.android.components.ECalApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -21,7 +22,7 @@
         android:theme="@style/Theme.ECAL">
 
         <activity
-            android:name=".android.components.activity.MainActivity"
+            android:name=".platform.android.components.activity.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.ECAL">
             <intent-filter>
@@ -32,10 +33,10 @@
         </activity>
 
         <receiver
-            android:name=".android.components.receiver.AlarmReceiver"
+            android:name=".platform.android.components.receiver.AlarmReceiver"
             android:exported="false" />
         <receiver
-            android:name=".android.components.receiver.BootReceiver"
+            android:name=".platform.android.components.receiver.BootReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
@@ -43,9 +44,13 @@
         </receiver>
 
         <service
-            android:name=".android.components.service.AlarmReconciliationService"
+            android:name=".platform.android.components.service.AlarmReconciliationService"
             android:exported="false"
             android:foregroundServiceType="shortService" />
+        <service
+            android:name=".platform.android.components.service.AudioPlayerService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
 
         <provider
             android:name="androidx.startup.InitializationProvider"

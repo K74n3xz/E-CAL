@@ -1,24 +1,42 @@
 package net.k74n3xz.ecal.ui.module.eventedit.viewmodel
 
+import java.io.FileInputStream
+import java.time.Duration
+import java.time.Instant
+import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import kotlin.concurrent.thread
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import net.k74n3xz.ecal.core.application.port.AlarmOccurrenceReconciler
-import net.k74n3xz.ecal.core.application.repository.EventRepository
-import net.k74n3xz.ecal.core.application.usecase.DeleteEventUseCase
-import net.k74n3xz.ecal.core.application.usecase.SaveEventUseCase
+import net.k74n3xz.ecal.core.application.port.`in`.service.AttachmentQueryService
+import net.k74n3xz.ecal.core.application.port.`in`.service.AttendeeQueryService
+import net.k74n3xz.ecal.core.application.port.`in`.service.EventQueryService
+import net.k74n3xz.ecal.core.application.port.`in`.usecase.DeleteEventUseCase
+import net.k74n3xz.ecal.core.application.port.`in`.usecase.SaveEventUseCase
+import net.k74n3xz.ecal.core.model.Alarm
+import net.k74n3xz.ecal.core.model.Attachment
+import net.k74n3xz.ecal.core.model.Attendee
 import net.k74n3xz.ecal.core.model.Event
+import net.k74n3xz.ecal.core.model.property.alarm.Action
+import net.k74n3xz.ecal.core.model.property.alarm.Trigger
+import net.k74n3xz.ecal.core.model.property.event.EventTiming
+import net.k74n3xz.ecal.core.preference.api.PreferenceRepository
 import net.k74n3xz.ecal.testutils.MainDispatcherRule
-import net.k74n3xz.ecal.ui.module.eventedit.viewmodel.state.EditMode
-import net.k74n3xz.ecal.ui.module.eventedit.viewmodel.state.EditOperationState
+import net.k74n3xz.ecal.ui.module.eventedit.viewmodel.state.EventEditOperationState
+import net.k74n3xz.ecal.ui.presentation.form.enumeration.alarm.ActionType
+import net.k74n3xz.ecal.ui.presentation.form.replaceText
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -30,8 +48,12 @@ class EventEditViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private lateinit var repository: FakeEventRepository
-    private lateinit var reconciler: FakeReconciler
+    private lateinit var queryService: FakeEventQueryService
+    private lateinit var attachmentQueryService: FakeAttachmentQueryService
+    private lateinit var attendeeQueryService: FakeAttendeeQueryService
+    private lateinit var saveUseCase: RecordingSaveEventUseCase
+    private lateinit var deleteUseCase: RecordingDeleteEventUseCase
+    private lateinit var preferences: FakePreferenceRepository
     private lateinit var viewModel: EventEditViewModel
 
     @Before
@@ -39,406 +61,443 @@ class EventEditViewModelTest {
         createFixture()
     }
 
-    private fun createFixture() {
-        repository = FakeEventRepository()
-        reconciler = FakeReconciler()
-        viewModel = EventEditViewModel(
-            eventRepository = repository,
-            saveEventUseCase = SaveEventUseCase(repository, reconciler),
-            deleteEventUseCase = DeleteEventUseCase(repository, reconciler)
-        )
-    }
-
     @Test
     fun initialState_isUninitialized() {
-        assertNull(viewModel.uiState.value.editMode)
-        assertTrue(viewModel.uiState.value.operationState is EditOperationState.Uninitialized)
+        assertTrue(viewModel.uiState.value.operationState is EventEditOperationState.InitializationState.Uninitialized)
+        assertTrue(viewModel.alarmForms.value.isEmpty())
     }
 
     @Test
-    fun uninitialized_rejectsSaveDeleteAndBack() = runTest(mainDispatcherRule.dispatcher) {
-        viewModel.saveEvent(Event(uid = "save"))
-        viewModel.deleteEvent(Event(uid = "delete"))
-        viewModel.requestBack()
+    fun initializeWithoutUid_createsNewTimedEventAndIsIdempotent() = runTest(mainDispatcherRule.dispatcher) {
+        runCurrent()
+        val before = Instant.now()
+
+        viewModel.initialize(null)
+        viewModel.initialize("ignored")
+
+        val state = viewModel.uiState.value.operationState
+        assertEquals(EventEditOperationState.Idle(null), state)
+        assertEquals(0, queryService.attempts)
+        assertTrue(viewModel.alarmForms.value.isEmpty())
+        val resolved = viewModel.eventForm.resolve(
+            originalEvent = Event(
+                uid = "placeholder",
+                schedule = EventTiming.Timed.InstantTiming(Instant.EPOCH)
+            ),
+            newAlarms = emptyList(),
+            timeZone = preferences.timeZone.value
+        ).getOrThrow()
+        val at = (resolved.schedule as EventTiming.Timed.InstantTiming).at
+        assertFalse(at.isBefore(before))
+    }
+
+    @Test
+    fun initializeWithoutUid_generatesUuidV7EventUidWhenSaved() = runTest(mainDispatcherRule.dispatcher) {
+        runCurrent()
+        viewModel.initialize(null)
+
+        viewModel.saveEvent()
         runCurrent()
 
-        assertTrue(viewModel.uiState.value.operationState is EditOperationState.Uninitialized)
-        assertEquals(0, repository.saveAttempts)
-        assertEquals(0, repository.deleteAttempts)
+        val uid = saveUseCase.saved.single().uid
+        assertTrue(uid.endsWith("-ECAL_event"))
+        assertEquals(7, UUID.fromString(uid.removeSuffix("-ECAL_event")).version())
     }
 
     @Test
-    fun switchToAddMode_entersAddModeAndIsIdempotent() {
-        viewModel.switchToAddMode()
-        viewModel.switchToAddMode()
-
-        assertSame(EditMode.AddEventMode, viewModel.uiState.value.editMode)
-        assertTrue(viewModel.uiState.value.operationState is EditOperationState.Idle)
-    }
-
-    @Test
-    fun switchToEditMode_whenEventExists_loadsEvent() = runTest(mainDispatcherRule.dispatcher) {
-        val event = Event(uid = "event-1", summary = "Loaded")
-        repository.eventToLoad = event
-
-        viewModel.switchToEditMode(event.uid)
-        assertTrue(viewModel.uiState.value.operationState is EditOperationState.Initializing)
+    fun initializeWithUid_loadsEventAndBuildsFormsUsingCurrentTimeZone() = runTest(mainDispatcherRule.dispatcher) {
+        preferences.timeZone.value = ZoneId.of("Asia/Hong_Kong")
+        val alarm = Alarm(
+            id = 5,
+            action = Action.Display("Reminder"),
+            trigger = Trigger.AbsoluteTrigger(Instant.parse("2026-07-20T03:00:00Z"))
+        )
+        queryService.event = Event(
+            uid = "event-1",
+            summary = "Loaded",
+            schedule = EventTiming.Timed.InstantTiming(Instant.parse("2026-07-20T03:00:00Z")),
+            alarms = listOf(alarm)
+        )
         runCurrent()
 
-        assertEquals(EditMode.EditEventMode(event), viewModel.uiState.value.editMode)
-        assertTrue(viewModel.uiState.value.operationState is EditOperationState.Idle)
-    }
-
-    @Test
-    fun switchToEditMode_whenEventIsMissing_entersFailedState() = runTest(mainDispatcherRule.dispatcher) {
-        viewModel.switchToEditMode("missing")
+        viewModel.initialize("event-1")
+        assertTrue(viewModel.uiState.value.operationState is EventEditOperationState.InitializationState.Initializing)
         runCurrent()
 
-        assertNull(viewModel.uiState.value.editMode)
-        assertTrue(viewModel.uiState.value.operationState is EditOperationState.Failed)
+        assertEquals(EventEditOperationState.Idle(null), viewModel.uiState.value.operationState)
+        assertEquals("Loaded", viewModel.eventForm.summary.text.toString())
+        assertEquals(11, viewModel.eventForm.startTime.hour)
+        assertEquals(1, viewModel.alarmForms.value.size)
+        assertEquals(11, viewModel.alarmForms.value.single().atTime.hour)
     }
 
     @Test
-    fun switchToEditMode_whenRepositoryFails_preservesCause() = runTest(mainDispatcherRule.dispatcher) {
+    fun missingEvent_entersInitializationFailedState() = runTest(mainDispatcherRule.dispatcher) {
+        runCurrent()
+
+        viewModel.initialize("missing")
+        runCurrent()
+
+        val state =
+            viewModel.uiState.value.operationState as EventEditOperationState.InitializationState.InitializationFailed
+        assertTrue(state.cause is IllegalArgumentException)
+        assertEquals("Event(uid=missing) doesn't exist.", state.cause.message)
+    }
+
+    @Test
+    fun queryFailure_isPreservedAndCancellationLeavesInitializingState() = runTest(mainDispatcherRule.dispatcher) {
         val failure = IllegalStateException("load failed")
-        repository.loadFailure = failure
-
-        viewModel.switchToEditMode("event-1")
+        queryService.failure = failure
         runCurrent()
 
-        val state = viewModel.uiState.value.operationState as EditOperationState.Failed
-        assertSame(failure, state.cause)
-    }
-
-    @Test
-    fun switchToEditMode_whenCancelled_doesNotConvertCancellationToFailure() = runTest(mainDispatcherRule.dispatcher) {
-        repository.loadFailure = CancellationException("cancelled")
-
-        viewModel.switchToEditMode("event-1")
+        viewModel.initialize("event")
         runCurrent()
 
-        assertNull(viewModel.uiState.value.editMode)
-        assertTrue(viewModel.uiState.value.operationState is EditOperationState.Initializing)
-    }
-
-    @Test
-    fun switchToEditMode_whenCalledTwiceWhileLoading_queriesOnlyOnce() = runTest(mainDispatcherRule.dispatcher) {
-        repository.eventToLoad = Event(uid = "event-1")
-
-        viewModel.switchToEditMode("event-1")
-        viewModel.switchToEditMode("event-2")
-        runCurrent()
-
-        assertEquals(1, repository.loadAttempts)
-        assertEquals(EditMode.EditEventMode(repository.eventToLoad!!), viewModel.uiState.value.editMode)
-    }
-
-    @Test
-    fun initialization_whenCalledConcurrently_onlyOneModeWins() = runTest(mainDispatcherRule.dispatcher) {
-        repository.eventToLoad = Event(uid = "event-1")
-
-        runConcurrently({ viewModel.switchToAddMode() }, { viewModel.switchToEditMode("event-1") })
-        runCurrent()
-
-        when (viewModel.uiState.value.editMode) {
-            EditMode.AddEventMode -> assertEquals(0, repository.loadAttempts)
-            is EditMode.EditEventMode -> assertEquals(1, repository.loadAttempts)
-            null -> throw AssertionError("One initialization attempt must succeed")
-        }
-        assertTrue(viewModel.uiState.value.operationState is EditOperationState.Idle)
-    }
-
-    @Test
-    fun loading_rejectsSaveDeleteAndBack() = runTest(mainDispatcherRule.dispatcher) {
-        repository.eventToLoad = Event(uid = "loaded")
-        viewModel.switchToEditMode("loaded")
-
-        viewModel.saveEvent(Event(uid = "save"))
-        viewModel.deleteEvent(Event(uid = "delete"))
-        viewModel.requestBack()
-
-        assertTrue(viewModel.uiState.value.operationState is EditOperationState.Initializing)
-        assertEquals(0, repository.saveAttempts)
-        assertEquals(0, repository.deleteAttempts)
-        runCurrent()
-        assertEquals(
-            EditMode.EditEventMode(repository.eventToLoad!!),
-            viewModel.uiState.value.editMode
-        )
-    }
-
-    @Test
-    fun initializedMode_cannotBeReplaced() = runTest(mainDispatcherRule.dispatcher) {
-        viewModel.switchToAddMode()
-        repository.eventToLoad = Event(uid = "event-1")
-
-        viewModel.switchToEditMode("event-1")
-        runCurrent()
-
-        assertSame(EditMode.AddEventMode, viewModel.uiState.value.editMode)
-        assertEquals(0, repository.loadAttempts)
-    }
-
-    @Test
-    fun saveEvent_transitionsToSavingThenSuccessAndReconciles() = runTest(mainDispatcherRule.dispatcher) {
-        viewModel.switchToAddMode()
-        val event = Event(uid = "event-1")
-
-        viewModel.saveEvent(event)
-        assertTrue(viewModel.uiState.value.operationState is EditOperationState.Saving)
-        runCurrent()
-
-        assertEquals(listOf(event), repository.savedEvents)
-        assertEquals(1, reconciler.calls)
-        assertTrue(viewModel.uiState.value.operationState is EditOperationState.Success)
-    }
-
-    @Test
-    fun saveEvent_whenCalledAgainWhileSaving_ignoresDuplicate() = runTest(mainDispatcherRule.dispatcher) {
-        viewModel.switchToAddMode()
-        val first = Event(uid = "first")
-        val second = Event(uid = "second")
-
-        viewModel.saveEvent(first)
-        viewModel.saveEvent(second)
-        runCurrent()
-
-        assertEquals(listOf(first), repository.savedEvents)
-        assertEquals(1, reconciler.calls)
-    }
-
-    @Test
-    fun saveEvent_whenCalledConcurrently_savesOnlyOnce() = runTest(mainDispatcherRule.dispatcher) {
-        viewModel.switchToAddMode()
-        val events = List(16) { Event(uid = "event-$it") }
-
-        runConcurrently(*events.map { event -> { viewModel.saveEvent(event) } }.toTypedArray())
-        runCurrent()
-
-        assertEquals(1, repository.saveAttempts)
-        assertEquals(1, repository.savedEvents.size)
-        assertEquals(1, reconciler.calls)
-        assertTrue(viewModel.uiState.value.operationState is EditOperationState.Success)
-    }
-
-    @Test
-    fun saveEvent_afterFailure_canRetry() = runTest(mainDispatcherRule.dispatcher) {
-        viewModel.switchToAddMode()
-        val failure = IllegalStateException("save failed")
-        repository.saveFailure = failure
-        val event = Event(uid = "event-1")
-
-        viewModel.saveEvent(event)
-        runCurrent()
-        assertSame(
-            failure,
-            (viewModel.uiState.value.operationState as EditOperationState.Failed).cause
-        )
-
-        repository.saveFailure = null
-        viewModel.saveEvent(event)
-        runCurrent()
-
-        assertTrue(viewModel.uiState.value.operationState is EditOperationState.Success)
-        assertEquals(2, repository.saveAttempts)
-        assertEquals(1, reconciler.calls)
-    }
-
-    @Test
-    fun saveEvent_whenCancelled_staysSavingUntilScopeIsDisposed() = runTest(mainDispatcherRule.dispatcher) {
-        viewModel.switchToAddMode()
-        repository.saveFailure = CancellationException("cancelled")
-
-        viewModel.saveEvent(Event(uid = "event-1"))
-        runCurrent()
-
-        assertTrue(viewModel.uiState.value.operationState is EditOperationState.Saving)
-    }
-
-    @Test
-    fun saveEvent_whenReconciliationFails_preservesFailureAfterSaving() = runTest(mainDispatcherRule.dispatcher) {
-        viewModel.switchToAddMode()
-        val failure = IllegalStateException("reconciliation failed")
-        reconciler.failure = failure
-        val event = Event(uid = "event-1")
-
-        viewModel.saveEvent(event)
-        runCurrent()
-
-        assertEquals(listOf(event), repository.savedEvents)
-        assertSame(failure, (viewModel.uiState.value.operationState as EditOperationState.Failed).cause)
-    }
-
-    @Test
-    fun deleteEvent_transitionsToDeletingThenSuccessAndReconciles() = runTest(mainDispatcherRule.dispatcher) {
-        viewModel.switchToAddMode()
-        val event = Event(uid = "event-1")
-
-        viewModel.deleteEvent(event)
-        assertTrue(viewModel.uiState.value.operationState is EditOperationState.Deleting)
-        runCurrent()
-
-        assertEquals(listOf(event.uid), repository.deletedUids)
-        assertEquals(1, reconciler.calls)
-        assertTrue(viewModel.uiState.value.operationState is EditOperationState.Success)
-    }
-
-    @Test
-    fun deleteEvent_afterFailure_canRetry() = runTest(mainDispatcherRule.dispatcher) {
-        viewModel.switchToAddMode()
-        repository.deleteFailure = IllegalStateException("delete failed")
-        val event = Event(uid = "event-1")
-
-        viewModel.deleteEvent(event)
-        runCurrent()
-        assertTrue(viewModel.uiState.value.operationState is EditOperationState.Failed)
-
-        repository.deleteFailure = null
-        viewModel.deleteEvent(event)
-        runCurrent()
-
-        assertTrue(viewModel.uiState.value.operationState is EditOperationState.Success)
-        assertEquals(2, repository.deleteAttempts)
-        assertEquals(1, reconciler.calls)
-    }
-
-    @Test
-    fun deleteEvent_whenCalledAgainWhileDeleting_ignoresDuplicate() = runTest(mainDispatcherRule.dispatcher) {
-        viewModel.switchToAddMode()
-        val first = Event(uid = "first")
-        val second = Event(uid = "second")
-
-        viewModel.deleteEvent(first)
-        viewModel.deleteEvent(second)
-        runCurrent()
-
-        assertEquals(listOf(first.uid), repository.deletedUids)
-        assertEquals(1, reconciler.calls)
-    }
-
-    @Test
-    fun deleteEvent_whenCalledConcurrently_deletesOnlyOnce() = runTest(mainDispatcherRule.dispatcher) {
-        viewModel.switchToAddMode()
-        val events = List(16) { Event(uid = "event-$it") }
-
-        runConcurrently(*events.map { event -> { viewModel.deleteEvent(event) } }.toTypedArray())
-        runCurrent()
-
-        assertEquals(1, repository.deleteAttempts)
-        assertEquals(1, repository.deletedUids.size)
-        assertEquals(1, reconciler.calls)
-        assertTrue(viewModel.uiState.value.operationState is EditOperationState.Success)
-    }
-
-    @Test
-    fun deleteEvent_whenCancelled_staysDeletingUntilScopeIsDisposed() = runTest(mainDispatcherRule.dispatcher) {
-        viewModel.switchToAddMode()
-        repository.deleteFailure = CancellationException("cancelled")
-
-        viewModel.deleteEvent(Event(uid = "event-1"))
-        runCurrent()
-
-        assertTrue(viewModel.uiState.value.operationState is EditOperationState.Deleting)
-    }
-
-    @Test
-    fun deleteEvent_whenReconciliationFails_preservesFailureAfterDeleting() = runTest(mainDispatcherRule.dispatcher) {
-        viewModel.switchToAddMode()
-        val failure = IllegalStateException("reconciliation failed")
-        reconciler.failure = failure
-        val event = Event(uid = "event-1")
-
-        viewModel.deleteEvent(event)
-        runCurrent()
-
-        assertEquals(listOf(event.uid), repository.deletedUids)
-        assertSame(failure, (viewModel.uiState.value.operationState as EditOperationState.Failed).cause)
-    }
-
-    @Test
-    fun requestBack_isAllowedOnlyWhenIdleOrFailed() = runTest(mainDispatcherRule.dispatcher) {
-        viewModel.switchToAddMode()
-        viewModel.requestBack()
-        assertTrue(viewModel.uiState.value.operationState is EditOperationState.Success)
+        val failed =
+            viewModel.uiState.value.operationState as EventEditOperationState.InitializationState.InitializationFailed
+        assertSame(failure, failed.cause)
 
         createFixture()
-        viewModel.switchToAddMode()
-        repository.saveFailure = IllegalStateException("save failed")
-        viewModel.saveEvent(Event(uid = "event-1"))
-        viewModel.requestBack()
-        assertTrue(viewModel.uiState.value.operationState is EditOperationState.Saving)
+        queryService.failure = CancellationException("cancelled")
         runCurrent()
-        assertTrue(viewModel.uiState.value.operationState is EditOperationState.Failed)
-        viewModel.requestBack()
-        assertTrue(viewModel.uiState.value.operationState is EditOperationState.Success)
+        viewModel.initialize("event")
+        runCurrent()
+        assertTrue(viewModel.uiState.value.operationState is EventEditOperationState.InitializationState.Initializing)
     }
 
     @Test
-    fun consumeOperationSuccess_consumesEachSuccessExactlyOnce() {
-        viewModel.switchToAddMode()
-        viewModel.requestBack()
+    fun repeatedOrConcurrentInitialization_queriesAtMostOnce() = runTest(mainDispatcherRule.dispatcher) {
+        queryService.event = testEvent("loaded")
+        runCurrent()
 
-        assertTrue(viewModel.consumeOperationSuccess())
-        assertTrue(viewModel.uiState.value.operationState is EditOperationState.Idle)
-        assertTrue(!viewModel.consumeOperationSuccess())
+        runConcurrently(
+            { viewModel.initialize("loaded") },
+            { viewModel.initialize("other") },
+            { viewModel.initialize(null) }
+        )
+        runCurrent()
+
+        assertTrue(queryService.attempts in 0..1)
+        assertTrue(viewModel.uiState.value.operationState is EventEditOperationState.Idle)
+    }
+
+    @Test
+    fun addAndRemoveAlarm_updatesPublishedForms() = runTest(mainDispatcherRule.dispatcher) {
+        runCurrent()
+        viewModel.initialize(null)
+
+        viewModel.addAlarm()
+
+        val alarm = viewModel.alarmForms.value.single()
+        assertEquals(Action.Display(""), alarm.resolve(null, preferences.timeZone.value).getOrThrow().action)
+        assertEquals(Duration.ofMinutes(-15), alarm.offset)
+
+        viewModel.removeAlarm(0)
+        assertTrue(viewModel.alarmForms.value.isEmpty())
+    }
+
+    @Test
+    fun audioAttachments_areFilteredAndSelectedAttachmentIsSaved() = runTest(mainDispatcherRule.dispatcher) {
+        val audio = Attachment(7, null, "alarm.mp3", "audio/mpeg", 42)
+        val document = Attachment(8, null, "agenda.pdf", "application/pdf", 84)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.audioAttachments.collect {}
+        }
+        attachmentQueryService.attachments.value = listOf(audio, document)
+        runCurrent()
+
+        viewModel.initialize(null)
+        viewModel.addAlarm()
+        viewModel.alarmForms.value.single().apply {
+            actionType = ActionType.AUDIO
+            audioAttachment = audio
+        }
+        viewModel.saveEvent()
+        runCurrent()
+
+        assertEquals(listOf(audio), viewModel.audioAttachments.value)
+        assertEquals(listOf("audio"), attachmentQueryService.requestedMimeTopLevelTypes)
+        assertEquals(Action.Audio(audio), saveUseCase.saved.single().alarms.single().action)
+    }
+
+    @Test
+    fun attendeesAndAllAttachments_areExposedAndSavedByEmailAction() = runTest(mainDispatcherRule.dispatcher) {
+        val attendee = Attendee(5, "User", null, "user@example.com")
+        val audio = Attachment(7, null, "alarm.mp3", "audio/mpeg", 42)
+        val document = Attachment(8, null, "agenda.pdf", "application/pdf", 84)
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.attendees.collect {}
+        }
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.attachments.collect {}
+        }
+        attendeeQueryService.attendees.value = listOf(attendee)
+        attachmentQueryService.attachments.value = listOf(audio, document)
+        runCurrent()
+
+        viewModel.initialize(null)
+        viewModel.addAlarm()
+        viewModel.alarmForms.value.single().apply {
+            actionType = ActionType.EMAIL
+            summary.replaceText("Subject")
+            descriptionEmail.replaceText("Body")
+            attendees += attendee
+            hasAttachments = true
+            attachments += document
+        }
+        viewModel.saveEvent()
+        runCurrent()
+
+        assertEquals(listOf(attendee), viewModel.attendees.value)
+        assertEquals(listOf(audio, document), viewModel.attachments.value)
+        assertEquals(
+            Action.Email("Body", "Subject", listOf(attendee), listOf(document)),
+            saveUseCase.saved.single().alarms.single().action
+        )
+    }
+
+    @Test
+    fun saveEvent_resolvesEditedFormAndAlarmsThenExits() = runTest(mainDispatcherRule.dispatcher) {
+        runCurrent()
+        viewModel.initialize(null)
+        viewModel.eventForm.summary.replaceText("New event")
+        viewModel.eventForm.isSummaryClear = false
+        viewModel.addAlarm()
+
+        viewModel.saveEvent()
+        assertEquals(EventEditOperationState.Saving, viewModel.uiState.value.operationState)
+        runCurrent()
+
+        val saved = saveUseCase.saved.single()
+        assertEquals("New event", saved.summary)
+        assertEquals(1, saved.alarms.size)
+        assertEquals(EventEditOperationState.Exit, viewModel.uiState.value.operationState)
+    }
+
+    @Test
+    fun invalidAlarm_preventsUseCaseAndReturnsErrorToIdle() = runTest(mainDispatcherRule.dispatcher) {
+        runCurrent()
+        viewModel.initialize(null)
+        viewModel.addAlarm()
+        viewModel.alarmForms.value.single().apply {
+            isRepetitionEnabled = true
+            repeat.replaceText("")
+        }
+
+        viewModel.saveEvent()
+        runCurrent()
+
+        val state = viewModel.uiState.value.operationState as EventEditOperationState.Idle
+        assertTrue(state.failure is IllegalArgumentException)
+        assertTrue(saveUseCase.saved.isEmpty())
+    }
+
+    @Test
+    fun saveFailure_returnsToIdleAndCanRetry() = runTest(mainDispatcherRule.dispatcher) {
+        val failure = IllegalStateException("save failed")
+        saveUseCase.failure = failure
+        runCurrent()
+        viewModel.initialize(null)
+
+        viewModel.saveEvent()
+        runCurrent()
+
+        assertSame(failure, (viewModel.uiState.value.operationState as EventEditOperationState.Idle).failure)
+        saveUseCase.failure = null
+        viewModel.saveEvent()
+        runCurrent()
+        assertEquals(2, saveUseCase.attempts)
+        assertEquals(EventEditOperationState.Exit, viewModel.uiState.value.operationState)
+    }
+
+    @Test
+    fun saveCancellation_staysSavingAndConcurrentCallsInvokeOnce() = runTest(mainDispatcherRule.dispatcher) {
+        saveUseCase.failure = CancellationException("cancelled")
+        runCurrent()
+        viewModel.initialize(null)
+
+        runConcurrently(*Array(12) { { viewModel.saveEvent() } })
+        runCurrent()
+
+        assertEquals(1, saveUseCase.attempts)
+        assertEquals(EventEditOperationState.Saving, viewModel.uiState.value.operationState)
+    }
+
+    @Test
+    fun deleteEvent_forwardsLoadedUidAndCanRetryAfterFailure() = runTest(mainDispatcherRule.dispatcher) {
+        queryService.event = testEvent("event-7")
+        val failure = IllegalStateException("delete failed")
+        deleteUseCase.failure = failure
+        runCurrent()
+        viewModel.initialize("event-7")
+        runCurrent()
+
+        viewModel.deleteEvent()
+        assertEquals(EventEditOperationState.Deleting, viewModel.uiState.value.operationState)
+        runCurrent()
+        assertSame(failure, (viewModel.uiState.value.operationState as EventEditOperationState.Idle).failure)
+
+        deleteUseCase.failure = null
+        viewModel.deleteEvent()
+        runCurrent()
+        assertEquals(listOf("event-7"), deleteUseCase.deleted)
+        assertEquals(2, deleteUseCase.attempts)
+        assertEquals(EventEditOperationState.Exit, viewModel.uiState.value.operationState)
+    }
+
+    @Test
+    fun deleteCancellation_staysDeletingAndConcurrentCallsInvokeOnce() = runTest(mainDispatcherRule.dispatcher) {
+        deleteUseCase.failure = CancellationException("cancelled")
+        runCurrent()
+        viewModel.initialize(null)
+
+        runConcurrently(*Array(12) { { viewModel.deleteEvent() } })
+        runCurrent()
+
+        assertEquals(1, deleteUseCase.attempts)
+        assertEquals(EventEditOperationState.Deleting, viewModel.uiState.value.operationState)
+    }
+
+    @Test
+    fun operationsAreRejectedUntilInitializedAndWhileBusy() = runTest(mainDispatcherRule.dispatcher) {
+        viewModel.saveEvent()
+        viewModel.deleteEvent()
+        assertEquals(0, saveUseCase.attempts)
+        assertEquals(0, deleteUseCase.attempts)
+
+        runCurrent()
+        viewModel.initialize(null)
+        saveUseCase.failure = CancellationException("busy")
+        viewModel.saveEvent()
+        viewModel.deleteEvent()
+        runCurrent()
+
+        assertEquals(1, saveUseCase.attempts)
+        assertEquals(0, deleteUseCase.attempts)
+    }
+
+    @Test
+    fun requestAndConsumeExit_followStateContract() = runTest(mainDispatcherRule.dispatcher) {
+        viewModel.requestExit()
+        assertEquals(EventEditOperationState.Exit, viewModel.uiState.value.operationState)
+        assertTrue(viewModel.consumeExitState())
+        assertEquals(EventEditOperationState.Exited, viewModel.uiState.value.operationState)
+        assertFalse(viewModel.consumeExitState())
+
+        createFixture()
+        runCurrent()
+        viewModel.initialize(null)
+        saveUseCase.failure = CancellationException("busy")
+        viewModel.saveEvent()
+        viewModel.requestExit()
+        assertEquals(EventEditOperationState.Saving, viewModel.uiState.value.operationState)
+    }
+
+    private fun createFixture() {
+        queryService = FakeEventQueryService()
+        attachmentQueryService = FakeAttachmentQueryService()
+        attendeeQueryService = FakeAttendeeQueryService()
+        saveUseCase = RecordingSaveEventUseCase()
+        deleteUseCase = RecordingDeleteEventUseCase()
+        preferences = FakePreferenceRepository()
+        viewModel = EventEditViewModel(
+            queryService,
+            attachmentQueryService,
+            attendeeQueryService,
+            saveUseCase,
+            deleteUseCase,
+            preferences
+        )
     }
 
     private fun runConcurrently(vararg actions: () -> Unit) {
         val ready = CountDownLatch(actions.size)
         val start = CountDownLatch(1)
         val workers = actions.map { action ->
-            thread(start = true) {
+            thread {
                 ready.countDown()
                 start.await()
                 action()
             }
         }
-
         ready.await()
         start.countDown()
         workers.forEach(Thread::join)
     }
 }
 
-private class FakeEventRepository : EventRepository {
-    var eventToLoad: Event? = null
-    var loadFailure: Exception? = null
-    var saveFailure: Exception? = null
-    var deleteFailure: Exception? = null
-    var saveAttempts = 0
-    var deleteAttempts = 0
-    var loadAttempts = 0
-    val savedEvents = mutableListOf<Event>()
-    val deletedUids = mutableListOf<String>()
+private class FakeAttachmentQueryService : AttachmentQueryService {
+    val attachments = MutableStateFlow<List<Attachment>>(emptyList())
+    val requestedMimeTopLevelTypes = mutableListOf<String>()
 
-    override suspend fun getEventByUid(uid: String): Event? {
-        loadAttempts++
-        loadFailure?.let { throw it }
-        return eventToLoad
+    override suspend fun findAttachmentById(attachmentId: Long): Attachment? =
+        attachments.value.firstOrNull { it.id == attachmentId }
+
+    override fun observeAvailableAttachments(): Flow<List<Attachment>> = attachments
+
+    override fun observeAvailableAttachmentsByMimeTopLevelType(topLevelType: String): Flow<List<Attachment>> {
+        requestedMimeTopLevelTypes += topLevelType
+        return attachments.map { values ->
+            values.filter { it.mimeType.startsWith("$topLevelType/") }
+        }
+    }
+
+    override suspend fun openAttachmentById(attachmentId: Long): FileInputStream? = null
+}
+
+private class FakeAttendeeQueryService : AttendeeQueryService {
+    val attendees = MutableStateFlow<List<Attendee>>(emptyList())
+
+    override suspend fun findAttendeeById(attendeeId: Long): Attendee? =
+        attendees.value.firstOrNull { it.id == attendeeId }
+
+    override fun observeAllAttendees(): Flow<List<Attendee>> = attendees
+}
+
+private fun testEvent(uid: String) = Event(
+    uid = uid,
+    schedule = EventTiming.Timed.InstantTiming(Instant.parse("2026-07-20T03:00:00Z"))
+)
+
+private class FakeEventQueryService : EventQueryService {
+    var event: Event? = null
+    var failure: Exception? = null
+    var attempts: Int = 0
+
+    override suspend fun findEventByUid(uid: String): Event? {
+        attempts++
+        failure?.let { throw it }
+        return event
     }
 
     override fun observeEventsOverlappingRange(rangeStart: ZonedDateTime, rangeEnd: ZonedDateTime): Flow<List<Event>> =
         emptyFlow()
+}
 
-    override suspend fun saveEvent(event: Event) {
-        saveAttempts++
-        saveFailure?.let { throw it }
-        savedEvents += event
-    }
+private class RecordingSaveEventUseCase : SaveEventUseCase {
+    var failure: Exception? = null
+    var attempts: Int = 0
+    val saved = mutableListOf<Event>()
 
-    override suspend fun deleteEventByUid(uid: String) {
-        deleteAttempts++
-        deleteFailure?.let { throw it }
-        deletedUids += uid
+    override suspend fun invoke(event: Event) {
+        attempts++
+        failure?.let { throw it }
+        saved += event
     }
 }
 
-private class FakeReconciler : AlarmOccurrenceReconciler {
-    var calls = 0
+private class RecordingDeleteEventUseCase : DeleteEventUseCase {
     var failure: Exception? = null
+    var attempts: Int = 0
+    val deleted = mutableListOf<String>()
 
-    override fun request() {
-        calls++
+    override suspend fun invoke(eventUid: String) {
+        attempts++
         failure?.let { throw it }
+        deleted += eventUid
     }
+}
+
+private class FakePreferenceRepository : PreferenceRepository {
+    override val timeZone = MutableStateFlow(ZoneId.of("UTC"))
 }

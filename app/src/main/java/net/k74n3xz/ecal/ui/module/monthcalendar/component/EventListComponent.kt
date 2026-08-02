@@ -27,10 +27,11 @@ import java.time.ZoneId
 import java.time.format.FormatStyle
 import net.k74n3xz.ecal.R
 import net.k74n3xz.ecal.core.model.Event
-import net.k74n3xz.ecal.core.model.enumeration.event.EventStatus
+import net.k74n3xz.ecal.core.model.property.event.EventStatus
+import net.k74n3xz.ecal.core.model.property.event.EventTiming
 import net.k74n3xz.ecal.ui.compositionlocal.LocalTimeZone
-import net.k74n3xz.ecal.utils.formatTimeRange
-import net.k74n3xz.ecal.utils.generateEventUid
+import net.k74n3xz.ecal.ui.utils.formatTimeRange
+import net.k74n3xz.ecal.ui.utils.generateEventUid
 
 @Composable
 fun EventListComponent(eventList: List<Event>, onEventEdit: (Event) -> Unit, modifier: Modifier = Modifier) {
@@ -65,8 +66,7 @@ private fun EventCard(event: Event, onEdit: (Event) -> Unit, modifier: Modifier 
                 } else {
                     MaterialTheme.colorScheme.onSurface.copy(0.4f)
                 }
-                val description =
-                    event.description ?: stringResource(R.string.text_no_description_hint)
+                val description = event.description ?: stringResource(R.string.text_no_description_hint)
                 val descriptionColor = if (event.summary != null) {
                     MaterialTheme.colorScheme.onSurface
                 } else {
@@ -123,9 +123,10 @@ private val sampleEvents = listOf(
         summary = "Team Standup",
         description = "Daily sync",
         location = "Conference Room A",
-        startAt = Instant.now().plusSeconds(3600),
-        isAllDayEvent = false,
-        endAt = Instant.now().plusSeconds(3600 * 2),
+        schedule = EventTiming.Timed.RangeTiming(
+            startAt = Instant.now().plusSeconds(3600),
+            endAt = Instant.now().plusSeconds(3600 * 2)
+        ),
         status = EventStatus.CONFIRMED
     ),
     Event(
@@ -135,9 +136,10 @@ private val sampleEvents = listOf(
         summary = "Design Review",
         description = "Review new UI flows",
         location = "Zoom",
-        startAt = Instant.now().plusSeconds(3600 * 24),
-        isAllDayEvent = false,
-        endAt = Instant.now().plusSeconds(3600 * 25),
+        schedule = EventTiming.Timed.RangeTiming(
+            startAt = Instant.now().plusSeconds(3600 * 24),
+            endAt = Instant.now().plusSeconds(3600 * 25)
+        ),
         status = EventStatus.CONFIRMED
     )
 )
@@ -158,7 +160,13 @@ private fun EventCardPreview2() {
     val timeZone = ZoneId.systemDefault()
 
     CompositionLocalProvider(LocalTimeZone provides timeZone) {
-        EventCard(Event(generateEventUid()), {})
+        EventCard(
+            event = Event(
+                uid = generateEventUid(),
+                schedule = EventTiming.Timed.InstantTiming(Instant.now())
+            ),
+            onEdit = {}
+        )
     }
 }
 

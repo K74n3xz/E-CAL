@@ -19,15 +19,17 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
-import net.k74n3xz.ecal.core.application.repository.EventRepository
+import net.k74n3xz.ecal.core.application.port.`in`.service.EventQueryService
 import net.k74n3xz.ecal.core.model.Event
+import net.k74n3xz.ecal.core.model.property.event.DateRange
+import net.k74n3xz.ecal.core.model.property.event.EventTiming
+import net.k74n3xz.ecal.core.model.utils.atEndOfDay
 import net.k74n3xz.ecal.core.preference.api.PreferenceRepository
-import net.k74n3xz.ecal.utils.atEndOfDay
 
 @HiltViewModel
 class MonthCalenderViewModel @Inject constructor(
     private val preferenceRepository: PreferenceRepository,
-    private val eventRepository: EventRepository
+    private val eventQueryService: EventQueryService
 ) : ViewModel() {
     private val timeZone: Flow<ZoneId> = preferenceRepository.timeZone
 
@@ -42,24 +44,25 @@ class MonthCalenderViewModel @Inject constructor(
         selectedDate
             .combine(timeZone) { localDate, timeZone -> localDate to timeZone }
             .flatMapLatest { (localDate, timeZone) ->
-                val leftBound = ZonedDateTime.of(
-                    localDate.yearMonth.minusMonths(1).atStartOfMonth().atStartOfDay(),
-                    timeZone
-                )
-                val rightBound = ZonedDateTime.of(
-                    localDate.yearMonth.plusMonths(1).atStartOfMonth().atStartOfDay(),
-                    timeZone
-                )
+                val leftBound =
+                    ZonedDateTime.of(localDate.yearMonth.minusMonths(1).atStartOfMonth().atStartOfDay(), timeZone)
+                val rightBound =
+                    ZonedDateTime.of(localDate.yearMonth.plusMonths(1).atEndOfMonth().atEndOfDay(), timeZone)
 
-                eventRepository.observeEventsOverlappingRange(leftBound, rightBound)
+                eventQueryService.observeEventsOverlappingRange(leftBound, rightBound)
             }
             .combine(timeZone) { events, timeZone -> events to timeZone }
             .mapLatest { (events, timeZone) ->
                 buildSet {
                     events.forEach { event ->
-                        val startLocalDate = event.startAt.atZone(timeZone).toLocalDate()
-                        val endLocalDate =
-                            event.endAt?.atZone(timeZone)?.toLocalDate() ?: startLocalDate
+                        val (startLocalDate, endLocalDate) = when (val schedule = event.schedule) {
+                            is EventTiming.AllDay -> schedule.dateRange
+
+                            is EventTiming.Timed -> {
+                                val (startAt, endAt) = schedule.timeRange
+                                DateRange(startAt.atZone(timeZone).toLocalDate(), endAt.atZone(timeZone).toLocalDate())
+                            }
+                        }
 
                         var localDate = startLocalDate
                         while (!localDate.isAfter(endLocalDate)) {
@@ -76,7 +79,7 @@ class MonthCalenderViewModel @Inject constructor(
         selectedDate
             .combine(timeZone) { localDate, timeZone -> localDate to timeZone }
             .flatMapLatest { (localDate, timeZone) ->
-                eventRepository.observeEventsOverlappingRange(
+                eventQueryService.observeEventsOverlappingRange(
                     localDate.atStartOfDay(timeZone),
                     localDate.atEndOfDay(timeZone)
                 )

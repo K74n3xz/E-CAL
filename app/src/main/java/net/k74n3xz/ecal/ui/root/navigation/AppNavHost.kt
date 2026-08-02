@@ -14,6 +14,10 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import net.k74n3xz.ecal.ui.module.attachmentmanagement.navigation.AttachmentManagementNavKey
+import net.k74n3xz.ecal.ui.module.attachmentmanagement.navigation.registerAttachmentManagementEntry
+import net.k74n3xz.ecal.ui.module.attendeemanagement.navigation.AttendeeManagementNavKey
+import net.k74n3xz.ecal.ui.module.attendeemanagement.navigation.registerAttendeeManagementEntry
 import net.k74n3xz.ecal.ui.module.eventedit.navigation.EventEditNavKey
 import net.k74n3xz.ecal.ui.module.eventedit.navigation.registerEventEditEntry
 import net.k74n3xz.ecal.ui.module.monthcalendar.navigation.MonthCalendarNavKey
@@ -50,9 +54,19 @@ fun AppNavHost() {
         entryProvider = entryProvider {
             registerMonthCalendarEntry(
                 navigateToAddEvent = { backStack.add(EventEditNavKey(null)) },
-                navigateToEditEvent = { backStack.add(EventEditNavKey(it.uid)) }
+                navigateToEditEvent = { backStack.add(EventEditNavKey(it.uid)) },
+                navigateToManageAttachment = { backStack.add(AttachmentManagementNavKey) },
+                navigateToManageAttendee = { backStack.add(AttendeeManagementNavKey) }
             )
             registerEventEditEntry(
+                registerNavHostAction = registerNavHostAction,
+                backToParent = { backStack.removeAt(backStack.size - 1) }
+            )
+            registerAttachmentManagementEntry(
+                registerNavHostAction = registerNavHostAction,
+                backToParent = { backStack.removeAt(backStack.size - 1) }
+            )
+            registerAttendeeManagementEntry(
                 registerNavHostAction = registerNavHostAction,
                 backToParent = { backStack.removeAt(backStack.size - 1) }
             )

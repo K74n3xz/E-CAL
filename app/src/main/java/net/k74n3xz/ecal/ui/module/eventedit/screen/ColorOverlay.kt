@@ -8,14 +8,25 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import java.time.Duration
+import java.time.Instant
 import java.time.ZoneId
+import net.k74n3xz.ecal.core.model.Alarm
 import net.k74n3xz.ecal.core.model.Event
+import net.k74n3xz.ecal.core.model.property.alarm.Action
+import net.k74n3xz.ecal.core.model.property.alarm.Trigger
+import net.k74n3xz.ecal.core.model.property.alarm.TriggerRelationship
+import net.k74n3xz.ecal.core.model.property.event.EventTiming
 import net.k74n3xz.ecal.ui.compositionlocal.LocalTimeZone
-import net.k74n3xz.ecal.utils.generateEventUid
+import net.k74n3xz.ecal.ui.presentation.form.utils.toAlarmForm
+import net.k74n3xz.ecal.ui.presentation.form.utils.toEventForm
+import net.k74n3xz.ecal.ui.utils.generateEventUid
 
 @Composable
 fun ColorOverlay(
@@ -50,15 +61,52 @@ fun ColorOverlay(
 @Preview(showBackground = true)
 @Composable
 fun ColorOverlayPreview() {
-    CompositionLocalProvider(LocalTimeZone provides ZoneId.systemDefault()) {
+    val timeZone = ZoneId.systemDefault()
+
+    val eventUiModel = remember {
+        Event(
+            uid = generateEventUid(),
+            schedule = EventTiming.Timed.InstantTiming(Instant.now())
+        ).toEventForm(timeZone)
+    }
+    val alarmUiModels = remember {
+        mutableStateListOf(
+            Alarm(
+                action = Action.Display(""),
+                trigger = Trigger.RelativeTrigger(
+                    relativeTo = TriggerRelationship.START,
+                    offset = Duration.ofMinutes(-15)
+                )
+            ).toAlarmForm(timeZone)
+        )
+    }
+
+    CompositionLocalProvider(LocalTimeZone provides timeZone) {
         Surface(modifier = Modifier.fillMaxSize()) {
             ColorOverlay(
                 enabled = true,
                 contentOnOverlay = { CircularProgressIndicator() }
             ) {
                 EventEditScreen(
-                    event = Event(generateEventUid()),
+                    eventForm = eventUiModel,
+                    alarmForms = alarmUiModels,
+                    audioAttachments = emptyList(),
+                    attendees = emptyList(),
+                    attachments = emptyList(),
+                    onAddAlarm = {
+                        alarmUiModels.add(
+                            Alarm(
+                                action = Action.Display(""),
+                                trigger = Trigger.RelativeTrigger(
+                                    relativeTo = TriggerRelationship.START,
+                                    offset = Duration.ofMinutes(-15)
+                                )
+                            ).toAlarmForm(timeZone)
+                        )
+                    },
+                    onRemoveAlarm = { alarmUiModels.removeAt(it) },
                     onCancel = {},
+                    canSave = eventUiModel.isValid && alarmUiModels.all { it.isValid },
                     onSave = {}
                 )
             }
