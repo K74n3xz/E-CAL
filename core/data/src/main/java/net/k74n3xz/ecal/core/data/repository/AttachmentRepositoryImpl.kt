@@ -3,6 +3,7 @@ package net.k74n3xz.ecal.core.data.repository
 import android.content.ContentResolver
 import android.content.Context
 import android.provider.DocumentsContract
+import android.provider.OpenableColumns
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -51,29 +52,26 @@ internal class AttachmentRepositoryImpl @Inject constructor(
         val uri = platformToken.toUri()
         val destination = File(attachmentDir, Uuid.random().toHexDashString())
 
-        require(
-            uri.scheme != ContentResolver.SCHEME_CONTENT || (
-                DocumentsContract.isDocumentUri(context.applicationContext, uri) &&
-                    contentResolver.getType(uri) != DocumentsContract.Document.MIME_TYPE_DIR
-                )
-        ) {
-            "Expected a non-directory document URI from a DocumentsProvider."
+        val mimeType = requireNotNull(contentResolver.getType(uri)) {
+            "Failed to retrieve attachment MIME type."
+        }
+
+        require(mimeType != DocumentsContract.Document.MIME_TYPE_DIR) {
+            "Expected a non-directory attachment URI."
         }
 
         contentResolver.query(
             uri,
             arrayOf(
-                DocumentsContract.Document.COLUMN_DISPLAY_NAME,
-                DocumentsContract.Document.COLUMN_MIME_TYPE,
-                DocumentsContract.Document.COLUMN_SIZE
+                OpenableColumns.DISPLAY_NAME,
+                OpenableColumns.SIZE
             ),
             null,
             null,
             null
         )?.use {
-            val nameIndex = it.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
-            val mimeTypeIndex = it.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_MIME_TYPE)
-            val sizeBytesIndex = it.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_SIZE)
+            val nameIndex = it.getColumnIndexOrThrow(OpenableColumns.DISPLAY_NAME)
+            val sizeBytesIndex = it.getColumnIndexOrThrow(OpenableColumns.SIZE)
 
             if (it.count == 1 && it.moveToFirst()) {
                 id = attachmentDao.queryIdByRowId(
@@ -82,7 +80,7 @@ internal class AttachmentRepositoryImpl @Inject constructor(
                             id = null,
                             description = description,
                             name = it.getString(nameIndex),
-                            mimeType = it.getString(mimeTypeIndex),
+                            mimeType = mimeType,
                             sizeBytes = it.getLong(sizeBytesIndex),
                             relativePath = destination.relativeTo(rootDir).path,
                             platformToken = uri.toString(),
@@ -91,9 +89,9 @@ internal class AttachmentRepositoryImpl @Inject constructor(
                     ).single()
                 )!!
             } else {
-                throw IOException("The file metadata query returned an invalid result.")
+                throw IOException("The attachment metadata query returned an invalid result.")
             }
-        } ?: throw IOException("Failed to retrieve file metadata.")
+        } ?: throw IOException("Failed to retrieve attachment metadata.")
 
         try {
             if (!attachmentDir.exists() && !attachmentDir.mkdir()) {
@@ -104,7 +102,7 @@ internal class AttachmentRepositoryImpl @Inject constructor(
                 destination.outputStream().use { outputStream ->
                     inputStream.copyTo(outputStream)
                 }
-            } ?: throw IOException("Failed to copy the file.")
+            } ?: throw IOException("Failed to copy the attachment.")
         } catch (exception: Exception) {
             attachmentDao.updateFileStateById(id, FileState.IMPORT_FAILED)
             throw exception

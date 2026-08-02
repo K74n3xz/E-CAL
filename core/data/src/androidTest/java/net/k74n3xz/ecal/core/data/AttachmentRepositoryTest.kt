@@ -80,7 +80,7 @@ class AttachmentRepositoryTest {
             repository.addAttachment(null, uri.toString())
         }
 
-        assertEquals("Expected a non-directory document URI from a DocumentsProvider.", error.message)
+        assertEquals("Expected a non-directory attachment URI.", error.message)
         assertTrue(allAttachmentRows().isEmpty())
     }
 
@@ -91,9 +91,10 @@ class AttachmentRepositoryTest {
             id = "invalid-metadata",
             metadataRows = 0
         )
-        assertSuspendFails<IOException> {
+        val metadataError = assertSuspendFails<IllegalArgumentException> {
             repository.addAttachment(null, invalidMetadata.toString())
         }
+        assertEquals("Failed to retrieve attachment MIME type.", metadataError.message)
         assertTrue(allAttachmentRows().isEmpty())
 
         val copyFailure = TestDocumentsProvider.register(
