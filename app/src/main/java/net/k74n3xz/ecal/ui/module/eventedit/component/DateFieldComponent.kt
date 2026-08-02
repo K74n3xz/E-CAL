@@ -66,7 +66,7 @@ fun DateFieldComponent(date: LocalDate, onPickDate: (LocalDate) -> Unit, modifie
     if (isShowingDialog) {
         val datePickerState = DatePickerState(
             locale = LocalLocale.current.platformLocale,
-            initialSelectedDate = date
+            initialSelectedDateMillis = date.atStartOfDay(utcZoneId).toInstant().toEpochMilli()
         )
 
         DatePickerDialog(
