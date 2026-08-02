@@ -6,7 +6,7 @@ import android.os.Build
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
-import net.k74n3xz.ecal.core.application.port.out.platform.AudioPlayer
+import net.k74n3xz.ecal.core.application.port.outbound.platform.AudioPlayer
 import net.k74n3xz.ecal.platform.android.components.service.AudioPlayerService
 
 @Singleton

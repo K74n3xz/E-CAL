@@ -3,7 +3,7 @@ package net.k74n3xz.ecal.platform.port
 import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
-import net.k74n3xz.ecal.core.application.port.out.platform.AlarmScheduler
+import net.k74n3xz.ecal.core.application.port.outbound.platform.AlarmScheduler
 import net.k74n3xz.ecal.platform.android.helper.alarm.AlarmHelper
 
 @Singleton

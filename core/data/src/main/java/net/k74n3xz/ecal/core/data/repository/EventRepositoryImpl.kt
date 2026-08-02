@@ -9,7 +9,7 @@ import javax.inject.Singleton
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.mapLatest
-import net.k74n3xz.ecal.core.application.port.out.repository.EventRepository
+import net.k74n3xz.ecal.core.application.port.outbound.repository.EventRepository
 import net.k74n3xz.ecal.core.data.database.AppDatabase
 import net.k74n3xz.ecal.core.data.database.dao.AlarmDao
 import net.k74n3xz.ecal.core.data.database.dao.AlarmOccurrenceDao

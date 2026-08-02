@@ -9,7 +9,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import net.k74n3xz.ecal.R
-import net.k74n3xz.ecal.core.application.port.out.platform.NotificationPublisher
+import net.k74n3xz.ecal.core.application.port.outbound.platform.NotificationPublisher
 import net.k74n3xz.ecal.platform.android.constant.Notification as NotificationConstant
 import net.k74n3xz.ecal.platform.android.helper.notification.ReminderNotificationHelper
 

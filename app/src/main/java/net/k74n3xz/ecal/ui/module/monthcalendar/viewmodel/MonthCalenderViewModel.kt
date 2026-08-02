@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
-import net.k74n3xz.ecal.core.application.port.`in`.service.EventQueryService
+import net.k74n3xz.ecal.core.application.port.inbound.service.EventQueryService
 import net.k74n3xz.ecal.core.model.Event
 import net.k74n3xz.ecal.core.model.property.event.DateRange
 import net.k74n3xz.ecal.core.model.property.event.EventTiming

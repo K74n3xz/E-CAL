@@ -9,9 +9,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import net.k74n3xz.ecal.core.application.port.`in`.service.AttendeeQueryService
-import net.k74n3xz.ecal.core.application.port.`in`.usecase.DeleteAttendeeUseCase
-import net.k74n3xz.ecal.core.application.port.`in`.usecase.SaveAttendeeUseCase
+import net.k74n3xz.ecal.core.application.port.inbound.service.AttendeeQueryService
+import net.k74n3xz.ecal.core.application.port.inbound.usecase.DeleteAttendeeUseCase
+import net.k74n3xz.ecal.core.application.port.inbound.usecase.SaveAttendeeUseCase
 import net.k74n3xz.ecal.core.model.Attendee
 import net.k74n3xz.ecal.testutils.MainDispatcherRule
 import net.k74n3xz.ecal.ui.module.attendeemanagement.viewmodel.state.AttendeeOperationState

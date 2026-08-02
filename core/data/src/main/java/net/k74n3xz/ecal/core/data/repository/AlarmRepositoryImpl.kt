@@ -5,8 +5,8 @@ import java.time.Instant
 import java.time.ZoneId
 import javax.inject.Inject
 import javax.inject.Singleton
-import net.k74n3xz.ecal.core.application.port.out.repository.AlarmRepository
-import net.k74n3xz.ecal.core.application.port.out.repository.result.AlarmOccurrenceNeedingReconciliation
+import net.k74n3xz.ecal.core.application.port.outbound.repository.AlarmRepository
+import net.k74n3xz.ecal.core.application.port.outbound.repository.result.AlarmOccurrenceNeedingReconciliation
 import net.k74n3xz.ecal.core.data.database.AppDatabase
 import net.k74n3xz.ecal.core.data.database.dao.AlarmDao
 import net.k74n3xz.ecal.core.data.database.dao.AlarmOccurrenceDao

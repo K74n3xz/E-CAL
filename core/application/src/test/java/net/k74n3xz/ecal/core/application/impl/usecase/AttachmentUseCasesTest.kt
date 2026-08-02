@@ -1,8 +1,8 @@
 package net.k74n3xz.ecal.core.application.impl.usecase
 
 import kotlinx.coroutines.test.runTest
-import net.k74n3xz.ecal.core.application.port.`in`.usecase.command.AddAttachmentCommand
-import net.k74n3xz.ecal.core.application.port.`in`.usecase.command.UpdateAttachmentCommand
+import net.k74n3xz.ecal.core.application.port.inbound.usecase.command.AddAttachmentCommand
+import net.k74n3xz.ecal.core.application.port.inbound.usecase.command.UpdateAttachmentCommand
 import net.k74n3xz.ecal.core.application.testing.RecordingAttachmentCleanupScheduler
 import net.k74n3xz.ecal.core.application.testing.RecordingAttachmentRepository
 import org.junit.Assert.assertEquals

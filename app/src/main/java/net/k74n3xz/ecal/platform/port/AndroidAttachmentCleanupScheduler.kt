@@ -11,7 +11,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
-import net.k74n3xz.ecal.core.application.port.out.platform.AttachmentCleanupScheduler
+import net.k74n3xz.ecal.core.application.port.outbound.platform.AttachmentCleanupScheduler
 import net.k74n3xz.ecal.platform.android.work.AttachmentCleanupWorker
 
 @Singleton

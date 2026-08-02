@@ -1,8 +1,8 @@
 package net.k74n3xz.ecal.core.application.impl.usecase
 
-import net.k74n3xz.ecal.core.application.port.`in`.usecase.DeleteAttachmentUseCase
-import net.k74n3xz.ecal.core.application.port.out.platform.AttachmentCleanupScheduler
-import net.k74n3xz.ecal.core.application.port.out.repository.AttachmentRepository
+import net.k74n3xz.ecal.core.application.port.inbound.usecase.DeleteAttachmentUseCase
+import net.k74n3xz.ecal.core.application.port.outbound.platform.AttachmentCleanupScheduler
+import net.k74n3xz.ecal.core.application.port.outbound.repository.AttachmentRepository
 
 internal class DeleteAttachmentUseCaseImpl(
     private val attachmentRepository: AttachmentRepository,

@@ -3,14 +3,14 @@ package net.k74n3xz.ecal.core.application.impl.usecase
 import java.time.Instant
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import net.k74n3xz.ecal.core.application.port.`in`.usecase.HandleDueAlarmsUseCase
-import net.k74n3xz.ecal.core.application.port.out.platform.AlarmReconciler
-import net.k74n3xz.ecal.core.application.port.out.platform.AudioPlayer
-import net.k74n3xz.ecal.core.application.port.out.platform.EmailSender
-import net.k74n3xz.ecal.core.application.port.out.platform.NotificationPublisher
-import net.k74n3xz.ecal.core.application.port.out.platform.TimeZoneProvider
-import net.k74n3xz.ecal.core.application.port.out.repository.AlarmRepository
-import net.k74n3xz.ecal.core.application.port.out.repository.AttachmentRepository
+import net.k74n3xz.ecal.core.application.port.inbound.usecase.HandleDueAlarmsUseCase
+import net.k74n3xz.ecal.core.application.port.outbound.platform.AlarmReconciler
+import net.k74n3xz.ecal.core.application.port.outbound.platform.AudioPlayer
+import net.k74n3xz.ecal.core.application.port.outbound.platform.EmailSender
+import net.k74n3xz.ecal.core.application.port.outbound.platform.NotificationPublisher
+import net.k74n3xz.ecal.core.application.port.outbound.platform.TimeZoneProvider
+import net.k74n3xz.ecal.core.application.port.outbound.repository.AlarmRepository
+import net.k74n3xz.ecal.core.application.port.outbound.repository.AttachmentRepository
 import net.k74n3xz.ecal.core.model.property.alarm.Action
 
 internal class HandleDueAlarmsUseCaseImpl(

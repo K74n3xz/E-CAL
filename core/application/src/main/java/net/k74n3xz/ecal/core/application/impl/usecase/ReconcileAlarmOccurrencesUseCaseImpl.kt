@@ -2,9 +2,9 @@ package net.k74n3xz.ecal.core.application.impl.usecase
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import net.k74n3xz.ecal.core.application.port.`in`.usecase.ReconcileAlarmOccurrencesUseCase
-import net.k74n3xz.ecal.core.application.port.out.platform.AlarmScheduler
-import net.k74n3xz.ecal.core.application.port.out.repository.AlarmRepository
+import net.k74n3xz.ecal.core.application.port.inbound.usecase.ReconcileAlarmOccurrencesUseCase
+import net.k74n3xz.ecal.core.application.port.outbound.platform.AlarmScheduler
+import net.k74n3xz.ecal.core.application.port.outbound.repository.AlarmRepository
 
 internal class ReconcileAlarmOccurrencesUseCaseImpl(
     private val alarmRepository: AlarmRepository,

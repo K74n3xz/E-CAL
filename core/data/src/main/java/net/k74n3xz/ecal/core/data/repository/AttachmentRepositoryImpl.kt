@@ -15,7 +15,7 @@ import kotlin.uuid.Uuid
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.mapLatest
-import net.k74n3xz.ecal.core.application.port.out.repository.AttachmentRepository
+import net.k74n3xz.ecal.core.application.port.outbound.repository.AttachmentRepository
 import net.k74n3xz.ecal.core.data.database.dao.AttachmentDao
 import net.k74n3xz.ecal.core.data.database.entity.AttachmentEntity
 import net.k74n3xz.ecal.core.data.database.entity.enumeration.attachment.FileState

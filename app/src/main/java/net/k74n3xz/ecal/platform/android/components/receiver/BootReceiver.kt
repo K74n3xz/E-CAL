@@ -8,8 +8,8 @@ import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import net.k74n3xz.ecal.core.application.port.out.platform.AlarmReconciler
-import net.k74n3xz.ecal.core.application.port.out.repository.AlarmRepository
+import net.k74n3xz.ecal.core.application.port.outbound.platform.AlarmReconciler
+import net.k74n3xz.ecal.core.application.port.outbound.repository.AlarmRepository
 
 @AndroidEntryPoint
 class BootReceiver : BroadcastReceiver() {

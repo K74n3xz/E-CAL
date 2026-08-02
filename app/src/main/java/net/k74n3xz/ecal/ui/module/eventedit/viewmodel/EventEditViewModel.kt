@@ -15,11 +15,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import net.k74n3xz.ecal.core.application.port.`in`.service.AttachmentQueryService
-import net.k74n3xz.ecal.core.application.port.`in`.service.AttendeeQueryService
-import net.k74n3xz.ecal.core.application.port.`in`.service.EventQueryService
-import net.k74n3xz.ecal.core.application.port.`in`.usecase.DeleteEventUseCase
-import net.k74n3xz.ecal.core.application.port.`in`.usecase.SaveEventUseCase
+import net.k74n3xz.ecal.core.application.port.inbound.service.AttachmentQueryService
+import net.k74n3xz.ecal.core.application.port.inbound.service.AttendeeQueryService
+import net.k74n3xz.ecal.core.application.port.inbound.service.EventQueryService
+import net.k74n3xz.ecal.core.application.port.inbound.usecase.DeleteEventUseCase
+import net.k74n3xz.ecal.core.application.port.inbound.usecase.SaveEventUseCase
 import net.k74n3xz.ecal.core.model.Alarm
 import net.k74n3xz.ecal.core.model.Attachment
 import net.k74n3xz.ecal.core.model.Attendee

@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import net.k74n3xz.ecal.core.application.port.`in`.service.EventQueryService
+import net.k74n3xz.ecal.core.application.port.inbound.service.EventQueryService
 import net.k74n3xz.ecal.core.model.Event
 import net.k74n3xz.ecal.core.model.property.event.EventTiming
 import net.k74n3xz.ecal.core.preference.api.PreferenceRepository

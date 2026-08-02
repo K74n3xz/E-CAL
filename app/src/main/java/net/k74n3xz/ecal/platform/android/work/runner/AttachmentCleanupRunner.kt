@@ -4,7 +4,7 @@ import androidx.work.ListenableWorker
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.cancellation.CancellationException
-import net.k74n3xz.ecal.core.application.port.`in`.usecase.CleanupRemovingAttachmentUseCase
+import net.k74n3xz.ecal.core.application.port.inbound.usecase.CleanupRemovingAttachmentUseCase
 
 @Singleton
 internal class AttachmentCleanupRunner @Inject constructor(

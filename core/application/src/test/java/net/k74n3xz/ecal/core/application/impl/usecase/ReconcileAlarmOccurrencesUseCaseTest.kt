@@ -5,7 +5,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import net.k74n3xz.ecal.core.application.port.out.repository.result.AlarmOccurrenceNeedingReconciliation
+import net.k74n3xz.ecal.core.application.port.outbound.repository.result.AlarmOccurrenceNeedingReconciliation
 import net.k74n3xz.ecal.core.application.testing.ApplicationUseCaseTestData
 import net.k74n3xz.ecal.core.application.testing.RecordingAlarmRepository
 import net.k74n3xz.ecal.core.application.testing.RecordingScheduler

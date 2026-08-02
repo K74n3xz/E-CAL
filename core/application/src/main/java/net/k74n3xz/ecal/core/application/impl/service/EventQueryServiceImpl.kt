@@ -2,8 +2,8 @@ package net.k74n3xz.ecal.core.application.impl.service
 
 import java.time.ZonedDateTime
 import kotlinx.coroutines.flow.Flow
-import net.k74n3xz.ecal.core.application.port.`in`.service.EventQueryService
-import net.k74n3xz.ecal.core.application.port.out.repository.EventRepository
+import net.k74n3xz.ecal.core.application.port.inbound.service.EventQueryService
+import net.k74n3xz.ecal.core.application.port.outbound.repository.EventRepository
 import net.k74n3xz.ecal.core.model.Event
 
 internal class EventQueryServiceImpl(private val eventRepository: EventRepository) : EventQueryService {

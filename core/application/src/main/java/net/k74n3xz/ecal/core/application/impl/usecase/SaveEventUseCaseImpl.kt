@@ -1,9 +1,9 @@
 package net.k74n3xz.ecal.core.application.impl.usecase
 
-import net.k74n3xz.ecal.core.application.port.`in`.usecase.SaveEventUseCase
-import net.k74n3xz.ecal.core.application.port.out.platform.AlarmReconciler
-import net.k74n3xz.ecal.core.application.port.out.platform.TimeZoneProvider
-import net.k74n3xz.ecal.core.application.port.out.repository.EventRepository
+import net.k74n3xz.ecal.core.application.port.inbound.usecase.SaveEventUseCase
+import net.k74n3xz.ecal.core.application.port.outbound.platform.AlarmReconciler
+import net.k74n3xz.ecal.core.application.port.outbound.platform.TimeZoneProvider
+import net.k74n3xz.ecal.core.application.port.outbound.repository.EventRepository
 import net.k74n3xz.ecal.core.model.Event
 
 internal class SaveEventUseCaseImpl(

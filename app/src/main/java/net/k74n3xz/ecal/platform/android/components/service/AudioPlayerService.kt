@@ -35,7 +35,7 @@ import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import net.k74n3xz.ecal.R
-import net.k74n3xz.ecal.core.application.port.`in`.service.AttachmentQueryService
+import net.k74n3xz.ecal.core.application.port.inbound.service.AttachmentQueryService
 import net.k74n3xz.ecal.platform.android.constant.Action
 import net.k74n3xz.ecal.platform.android.constant.Notification as NotificationConstant
 import net.k74n3xz.ecal.platform.android.constant.RequestCode

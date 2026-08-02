@@ -14,7 +14,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
-import net.k74n3xz.ecal.core.application.port.out.platform.AlarmReconciler
+import net.k74n3xz.ecal.core.application.port.outbound.platform.AlarmReconciler
 import net.k74n3xz.ecal.platform.android.components.service.AlarmReconciliationService
 import net.k74n3xz.ecal.platform.android.work.AlarmReconciliationWorker
 

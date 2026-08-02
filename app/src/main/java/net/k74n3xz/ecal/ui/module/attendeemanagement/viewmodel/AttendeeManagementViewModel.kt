@@ -12,9 +12,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import net.k74n3xz.ecal.core.application.port.`in`.service.AttendeeQueryService
-import net.k74n3xz.ecal.core.application.port.`in`.usecase.DeleteAttendeeUseCase
-import net.k74n3xz.ecal.core.application.port.`in`.usecase.SaveAttendeeUseCase
+import net.k74n3xz.ecal.core.application.port.inbound.service.AttendeeQueryService
+import net.k74n3xz.ecal.core.application.port.inbound.usecase.DeleteAttendeeUseCase
+import net.k74n3xz.ecal.core.application.port.inbound.usecase.SaveAttendeeUseCase
 import net.k74n3xz.ecal.core.model.Attendee
 import net.k74n3xz.ecal.ui.module.attendeemanagement.viewmodel.state.AttendeeOperationState
 

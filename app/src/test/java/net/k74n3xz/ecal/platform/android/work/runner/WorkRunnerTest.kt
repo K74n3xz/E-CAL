@@ -4,9 +4,9 @@ import androidx.work.ListenableWorker
 import java.time.Instant
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
-import net.k74n3xz.ecal.core.application.port.`in`.usecase.CleanupRemovingAttachmentUseCase
-import net.k74n3xz.ecal.core.application.port.`in`.usecase.HandleDueAlarmsUseCase
-import net.k74n3xz.ecal.core.application.port.`in`.usecase.ReconcileAlarmOccurrencesUseCase
+import net.k74n3xz.ecal.core.application.port.inbound.usecase.CleanupRemovingAttachmentUseCase
+import net.k74n3xz.ecal.core.application.port.inbound.usecase.HandleDueAlarmsUseCase
+import net.k74n3xz.ecal.core.application.port.inbound.usecase.ReconcileAlarmOccurrencesUseCase
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
 import org.junit.Test

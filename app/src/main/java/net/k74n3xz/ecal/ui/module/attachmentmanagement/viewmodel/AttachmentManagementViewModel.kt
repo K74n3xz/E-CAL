@@ -14,12 +14,12 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import net.k74n3xz.ecal.core.application.port.`in`.service.AttachmentQueryService
-import net.k74n3xz.ecal.core.application.port.`in`.usecase.AddAttachmentUseCase
-import net.k74n3xz.ecal.core.application.port.`in`.usecase.DeleteAttachmentUseCase
-import net.k74n3xz.ecal.core.application.port.`in`.usecase.UpdateAttachmentUseCase
-import net.k74n3xz.ecal.core.application.port.`in`.usecase.command.AddAttachmentCommand
-import net.k74n3xz.ecal.core.application.port.`in`.usecase.command.UpdateAttachmentCommand
+import net.k74n3xz.ecal.core.application.port.inbound.service.AttachmentQueryService
+import net.k74n3xz.ecal.core.application.port.inbound.usecase.AddAttachmentUseCase
+import net.k74n3xz.ecal.core.application.port.inbound.usecase.DeleteAttachmentUseCase
+import net.k74n3xz.ecal.core.application.port.inbound.usecase.UpdateAttachmentUseCase
+import net.k74n3xz.ecal.core.application.port.inbound.usecase.command.AddAttachmentCommand
+import net.k74n3xz.ecal.core.application.port.inbound.usecase.command.UpdateAttachmentCommand
 import net.k74n3xz.ecal.core.model.Attachment
 import net.k74n3xz.ecal.ui.module.attachmentmanagement.viewmodel.state.AttachmentOperationState
 

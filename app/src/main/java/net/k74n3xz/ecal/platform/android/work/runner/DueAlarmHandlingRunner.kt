@@ -5,7 +5,7 @@ import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.cancellation.CancellationException
-import net.k74n3xz.ecal.core.application.port.`in`.usecase.HandleDueAlarmsUseCase
+import net.k74n3xz.ecal.core.application.port.inbound.usecase.HandleDueAlarmsUseCase
 
 @Singleton
 internal class DueAlarmHandlingRunner @Inject constructor(private val handleDueAlarms: HandleDueAlarmsUseCase) {
