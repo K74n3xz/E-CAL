@@ -1,5 +1,5 @@
 [versions]
-agp = "9.2.1"
+agp = "9.3.1"
 kotlin = "2.4.10"
 ksp = "2.3.6"
 coreKtx = "1.19.0"
@@ -13,7 +13,7 @@ composeBom = "2026.06.01"
 desugarJdk = "2.1.5"
 kotlinxSerialization = "1.11.0"
 kotlinxCoroutines = "1.11.0"
-nav3Core = "1.1.4"
+nav3Core = "1.1.5"
 lifecycleViewmodelNav3 = "2.11.0"
 room = "2.8.4"
 work = "2.11.2"
@@ -23,6 +23,7 @@ ical4j = "4.3.0"
 kizitonwoseCalendar = "2.10.1"
 annotations = "26.1.0"
 robolectric = "4.16.1"
+ktlint = "14.2.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -68,6 +69,10 @@ kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
 jetbrains-annotations = { group = "org.jetbrains", name = "annotations", version.ref = "annotations" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+# build-logic
+plugin-android-library = { group = "com.android.library", name = "com.android.library.gradle.plugin", version.ref = "agp" }
+plugin-jetbrains-kotlin-jvm = { group = "org.jetbrains.kotlin.jvm", name = "org.jetbrains.kotlin.jvm.gradle.plugin", version.ref = "kotlin" }
+plugin-ktlint = { group = "org.jlleitschuh.gradle.ktlint", name = "org.jlleitschuh.gradle.ktlint.gradle.plugin", version.ref = "ktlint" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
