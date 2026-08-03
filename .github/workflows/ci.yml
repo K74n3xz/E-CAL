@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: >-
+    ${{
+      format(
+        '{0}-{1}-{2}',
+        github.workflow,
+        github.event_name,
+        case(
+          github.event_name == 'pull_request',
+          format('pr-{0}', github.event.pull_request.number),
+          format('branch-{0}', github.ref_name)
+        )
+      )
+    }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: jetbrains
+          java-version: "21"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-provider: basic
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
+      - name: Run checks and assemble debug APK
+        id: verification
+        run: ./gradlew check :app:assembleDebug --stacktrace --console=plain
+
+      - name: Upload failure reports
+        if: ${{ failure() && steps.verification.outcome == 'failure' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: ci-reports-${{ github.run_attempt }}
+          path: |
+            **/build/reports/**
+            **/build/test-results/**
+          if-no-files-found: warn
+          retention-days: 7
