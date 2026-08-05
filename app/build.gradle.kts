@@ -30,10 +30,26 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
 
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+            optimization {
+                enable = true
+            }
+        }
+
+        create("profileable") {
+            isProfileable = true
+
+            isMinifyEnabled = true
+            isShrinkResources = true
+
+            optimization {
+                enable = true
+            }
+
+            signingConfig = signingConfigs.getByName("debug")
+
+            isCrunchPngs = true
+
+            matchingFallbacks += "release"
         }
     }
     compileOptions {
@@ -74,6 +90,7 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.core)
+    "profileableImplementation"(libs.androidx.compose.runtime.tracing)
     coreLibraryDesugaring(libs.android.tools.desugar.jdk)
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.androidx.navigation3.runtime)
