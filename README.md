@@ -46,10 +46,14 @@ Clone the repository and open it in Android Studio, then let Gradle sync the pro
 Useful Gradle commands:
 
 ```powershell
+.\gradlew.bat :ci
 .\gradlew.bat :app:assembleDebug
 .\gradlew.bat :app:testDebugUnitTest
 .\gradlew.bat :app:connectedDebugAndroidTest
+.\gradlew.bat :koverHtmlReportCoverage :koverXmlReportCoverage :koverLogCoverage
 ```
+
+The Kover tasks aggregate line coverage from JVM and Robolectric tests across the app and core modules. The HTML report is written to `build/reports/kover/html/`, and the JaCoCo-compatible XML report is written to `build/reports/kover/report.xml`. On-device `androidTest` coverage is not included.
 
 On Android 12+, exact reminder timing depends on the `SCHEDULE_EXACT_ALARM` permission. On Android 13+, notification reminders also require `POST_NOTIFICATIONS`.
 
