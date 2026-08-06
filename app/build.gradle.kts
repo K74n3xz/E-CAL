@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt.plugin)
+    alias(libs.plugins.kover)
 }
 
 android {
@@ -71,6 +72,14 @@ android {
 kotlin {
     compilerOptions {
         jvmTarget = JvmTarget.JVM_11
+    }
+}
+
+kover {
+    currentProject {
+        createVariant("coverage") {
+            add("debug")
+        }
     }
 }
 

@@ -32,7 +32,7 @@ jobs:
   verify:
     name: verify
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Check out repository
@@ -56,7 +56,16 @@ jobs:
 
       - name: Run checks and assemble debug APK
         id: verification
-        run: ./gradlew check :app:assembleDebug --stacktrace --console=plain
+        run: ./gradlew :ci --stacktrace --console=plain
+
+      - name: Upload coverage report
+        if: ${{ steps.verification.outcome == 'success' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-report-${{ github.run_attempt }}
+          path: build/reports/kover/**
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Upload failure reports
         if: ${{ failure() && steps.verification.outcome == 'failure' }}

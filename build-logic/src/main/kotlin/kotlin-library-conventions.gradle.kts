@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     `java-library`
     id("org.jetbrains.kotlin.jvm")
+    id("org.jetbrains.kotlinx.kover")
 }
 
 java {
@@ -13,5 +14,13 @@ java {
 kotlin {
     compilerOptions {
         jvmTarget = JvmTarget.JVM_11
+    }
+}
+
+kover {
+    currentProject {
+        createVariant("coverage") {
+            add("jvm")
+        }
     }
 }
